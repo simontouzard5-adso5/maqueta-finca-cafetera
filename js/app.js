@@ -33,7 +33,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (error && !primero) primero = campo;
       });
       if (primero) { primero.focus(); return; }
-      if (form.dataset.destino) { window.location.href = form.dataset.destino; return; }
+      if (form.dataset.destino) {
+        // En la maqueta, el rol se elige por el correo: dueno@... entra como Dueño de finca
+        const correo = form.querySelector('#correo');
+        const esDueno = correo && /^(dueno|duen|dueño)/i.test(correo.value.trim());
+        window.location.href = esDueno ? 'panel-dueno.html' : form.dataset.destino;
+        return;
+      }
       const aviso = form.querySelector('.aviso-ok');
       if (aviso) { aviso.hidden = false; aviso.focus(); }
     });
