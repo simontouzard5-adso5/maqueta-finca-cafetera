@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#5D3A1A">
+  <title>Vista previa · Finca Cafetera</title>
+  <link rel="icon" href="img/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="vendor/bootstrap.min.css">
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+<div class="app">
+  <a class="saltar" href="#contenido">Saltar al contenido</a>
+  <header class="barra-app con-volver">
+    <a class="boton-icono" href="generar-reporte.html" aria-label="Volver"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false">  <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/></svg></a>
+    <h1>Vista previa<small>Septiembre de 2026</small></h1>
+    
+  </header>
+  <main id="contenido" class="contenido">
+    <article class="hoja" aria-label="Reporte de producción">
+      <header class="hoja-encabezado">
+        <span class="marca"><img src="img/logo.svg" alt="">Reporte de producción</span>
+        <span class="text-end" style="font-size:var(--fs-ayuda)">01/09/2026<br>a 30/09/2026</span>
+      </header>
+      <table>
+        <caption>Producción de café por fecha y lote</caption>
+        <thead><tr><th scope="col">Fecha</th><th scope="col">Lote</th><th scope="col" class="num">Cantidad</th></tr></thead>
+        <tbody>
+          <tr><td>29/09</td><td>Lote 3 · El Mirador</td><td class="num">485,5 kg</td></tr>
+          <tr><td>27/09</td><td>Lote 1 · La Cañada</td><td class="num">612,0 kg</td></tr>
+          <tr><td>25/09</td><td>Lote 2 · El Guamo</td><td class="num">540,0 kg</td></tr>
+          <tr><td>22/09</td><td>Lote 3 · El Mirador</td><td class="num">398,5 kg</td></tr>
+          <tr><td>20/09</td><td>Lote 1 · La Cañada</td><td class="num">394,0 kg</td></tr>
+        </tbody>
+        <tfoot><tr><td colspan="2">Total · 5 registros</td><td class="num">2.430,0 kg</td></tr></tfoot>
+      </table>
+      <p class="form-text mb-0">Generado por Carlos Ríos el 08/10/2026.</p>
+    </article>
+    <div class="acciones-hoja formulario">
+      <button class="btn-primario" type="button" data-imprimir><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false">  <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/>  <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/></svg> Exportar PDF</button>
+      <a class="btn-secundario" href="generar-reporte.html">Volver</a>
+    </div>
+  </main>
+  <nav class="nav-inferior" aria-label="Navegación principal">
+    <a href="panel.html"><span class="pildora"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false">  <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z"/></svg></span>Inicio</a>
+    <a href="registrar-produccion.html"><span class="pildora"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false">  <path d="M5.757 1.071a.5.5 0 0 1 .172.686L3.383 6h9.234L10.07 1.757a.5.5 0 1 1 .858-.514L13.783 6H15a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1v4.5a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 1 13.5V9a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h1.217L5.07 1.243a.5.5 0 0 1 .686-.172zM2 9v4.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V9zM1 7v1h14V7zm3 3a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0v-3A.5.5 0 0 1 4 10m2 0a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0v-3A.5.5 0 0 1 6 10m2 0a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0v-3A.5.5 0 0 1 8 10m2 0a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0v-3a.5.5 0 0 1 .5-.5m2 0a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0v-3a.5.5 0 0 1 .5-.5"/></svg></span>Producción</a>
+    <a href="registrar-gasto.html"><span class="pildora"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false">  <path d="M12.136.326A1.5 1.5 0 0 1 14 1.78V3h.5A1.5 1.5 0 0 1 16 4.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 13.5v-9a1.5 1.5 0 0 1 1.432-1.499zM5.562 3H13V1.78a.5.5 0 0 0-.621-.484zM1.5 4a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5z"/></svg></span>Gastos</a>
+    <a href="generar-reporte.html" aria-current="page"><span class="pildora"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false">  <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0M9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1M4.5 9a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1zM4 10.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5m.5 2.5a.5.5 0 0 1 0-1h4a.5.5 0 0 1 0 1z"/></svg></span>Reportes</a>
+    <a href="mas.html"><span class="pildora"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false">  <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5zM2.5 2a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5zm6.5.5A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5zM1 10.5A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5zm6.5.5A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5z"/></svg></span>Más</a>
+  </nav>
+</div>
+<script src="js/app.js"></script>
+</body>
+</html>

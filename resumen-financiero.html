@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#5D3A1A">
+  <title>Resumen financiero · Finca Cafetera</title>
+  <link rel="icon" href="img/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="vendor/bootstrap.min.css">
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+<div class="app">
+  <a class="saltar" href="#contenido">Saltar al contenido</a>
+  <header class="barra-app con-volver">
+    <a class="boton-icono" href="mas.html" aria-label="Volver"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false">  <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/></svg></a>
+    <h1>Resumen financiero<small>Ganancia del período</small></h1>
+    
+  </header>
+  <main id="contenido" class="contenido">
+    <div class="total" style="background:var(--color-1)"><div><small>Utilidad neta · septiembre</small><strong>$ 5.583.800</strong></div><span>▲ Ganancia<br>margen del 59 %</span></div>
+    <section class="indicadores" aria-label="Ingresos y gastos">
+      <div class="tarjeta kpi"><small>Ingresos por ventas</small><strong>$ 9.453.800</strong><span>3 ventas</span></div>
+      <div class="tarjeta kpi"><small>Gastos</small><strong>$ 3.870.000</strong><span>5 gastos</span></div>
+    </section>
+    <div class="dos-columnas">
+    <section class="tarjeta" aria-labelledby="t-g">
+      <h2 id="t-g">Gastos por tipo</h2>
+      <div class="fila"><span>Mano de obra</span><strong>$ 2.330.000</strong></div><div class="medidor"><div style="width:60%"></div></div>
+      <div class="fila"><span>Insumos</span><strong>$ 1.080.000</strong></div><div class="medidor"><div style="width:28%"></div></div>
+      <div class="fila"><span>Transporte</span><strong>$ 460.000</strong></div><div class="medidor" style="margin-bottom:0"><div style="width:12%"></div></div>
+    </section>
+    <section class="tarjeta" aria-labelledby="t-i">
+      <h2 id="t-i">Ingresos por comprador</h2>
+      <div class="fila"><span>Cooperativa de Caficultores</span><strong>$ 6.233.000</strong></div><div class="medidor"><div style="width:66%;background:var(--color-1)"></div></div>
+      <div class="fila"><span>Trilladora El Arriero</span><strong>$ 3.220.800</strong></div><div class="medidor" style="margin-bottom:0"><div style="width:34%;background:var(--color-1)"></div></div>
+    </section>
+    </div>
+  </main>
+  <nav class="nav-inferior" aria-label="Navegación principal">
+    <a href="panel.html"><span class="pildora"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false">  <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z"/></svg></span>Inicio</a>
+    <a href="registrar-produccion.html"><span class="pildora"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false">  <path d="M5.757 1.071a.5.5 0 0 1 .172.686L3.383 6h9.234L10.07 1.757a.5.5 0 1 1 .858-.514L13.783 6H15a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1v4.5a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 1 13.5V9a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h1.217L5.07 1.243a.5.5 0 0 1 .686-.172zM2 9v4.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V9zM1 7v1h14V7zm3 3a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0v-3A.5.5 0 0 1 4 10m2 0a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0v-3A.5.5 0 0 1 6 10m2 0a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0v-3A.5.5 0 0 1 8 10m2 0a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0v-3a.5.5 0 0 1 .5-.5m2 0a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0v-3a.5.5 0 0 1 .5-.5"/></svg></span>Producción</a>
+    <a href="registrar-gasto.html"><span class="pildora"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false">  <path d="M12.136.326A1.5 1.5 0 0 1 14 1.78V3h.5A1.5 1.5 0 0 1 16 4.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 13.5v-9a1.5 1.5 0 0 1 1.432-1.499zM5.562 3H13V1.78a.5.5 0 0 0-.621-.484zM1.5 4a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5z"/></svg></span>Gastos</a>
+    <a href="generar-reporte.html"><span class="pildora"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false">  <path d="M5.5 7a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1zM5 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5"/>  <path d="M9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.5zm0 1v2A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z"/></svg></span>Reportes</a>
+    <a href="mas.html" aria-current="page"><span class="pildora"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false">  <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5zm-8 8A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5zm8 0A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5z"/></svg></span>Más</a>
+  </nav>
+</div>
+<script src="js/app.js"></script>
+</body>
+</html>

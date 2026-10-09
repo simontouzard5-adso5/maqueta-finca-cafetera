@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#5D3A1A">
+  <title>Iniciar sesión · Finca Cafetera</title>
+  <link rel="icon" href="img/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="vendor/bootstrap.min.css">
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+<div class="app">
+  <a class="saltar" href="#contenido">Saltar al contenido</a>
+  <div class="portada">
+    <img class="ilustracion" src="img/cafetal.svg" alt="Ilustración de un cafetal en ladera al amanecer">
+    <div class="marca-acceso"><img src="img/logo.svg" alt="Logotipo: cereza de café"><span>Finca Cafetera<small>Gestión contable</small></span></div>
+  </div>
+  <main id="contenido" class="hoja-acceso">
+    <div>
+      <h1 class="titulo-seccion">Iniciar sesión</h1>
+      <p class="saludo">Ingrese con el correo que le asignó el administrador de la finca.</p>
+    </div>
+    <form class="formulario" data-validar data-destino="panel.html" novalidate>
+    <div class="campo">
+      <label class="form-label" for="correo">Correo electrónico <span class="obligatorio" aria-hidden="true">*</span></label>
+      <input class="form-control" id="correo" type="email" autocomplete="email" required data-mensaje="Escriba su correo para continuar." aria-describedby="correo-ayuda correo-error" placeholder="nombre@correo.com">
+      <div class="form-text" id="correo-ayuda">Ejemplo: nombre@correo.com</div>
+      <div class="mensaje-error" id="correo-error" aria-live="polite"></div>
+    </div>
+    <div class="campo">
+      <label class="form-label" for="clave">Contraseña <span class="obligatorio" aria-hidden="true">*</span></label>
+      <div class="input-group">
+        <input class="form-control" id="clave" type="password" autocomplete="current-password" required data-mensaje="Escriba su contraseña para continuar." aria-describedby="clave-error">
+        <button class="input-group-text" type="button" data-mostrar="clave" aria-pressed="false">Mostrar</button>
+      </div>
+      <div class="mensaje-error" id="clave-error" aria-live="polite"></div>
+    </div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" id="recordar"><label class="form-check-label" for="recordar" style="font-size:var(--fs-etiqueta)">Recordar mi correo en este teléfono</label></div>
+      <button class="btn-primario" type="submit">Ingresar</button>
+      <a class="enlace" href="recuperar-clave.html">¿Olvidó su contraseña?</a>
+    </form>
+    <p class="pie-seguro"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false">  <path d="M5.338 1.59a61 61 0 0 0-2.837.856.48.48 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.7 10.7 0 0 0 2.287 2.233c.346.244.652.42.893.533q.18.085.293.118a1 1 0 0 0 .101.025 1 1 0 0 0 .1-.025q.114-.034.294-.118c.24-.113.547-.29.893-.533a10.7 10.7 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.213-1.75-.56-2.837-.855C9.552 1.29 8.531 1.067 8 1.067c-.53 0-1.552.223-2.662.524zM5.072.56C6.157.265 7.31 0 8 0s1.843.265 2.928.56c1.11.3 2.229.655 2.887.87a1.54 1.54 0 0 1 1.044 1.262c.596 4.477-.787 7.795-2.465 9.99a11.8 11.8 0 0 1-2.517 2.453 7 7 0 0 1-1.048.625c-.28.132-.581.24-.829.24s-.548-.108-.829-.24a7 7 0 0 1-1.048-.625 11.8 11.8 0 0 1-2.517-2.453C1.928 10.487.545 7.169 1.141 2.692A1.54 1.54 0 0 1 2.185 1.43 63 63 0 0 1 5.072.56"/>  <path d="M9.5 6.5a1.5 1.5 0 0 1-1 1.415l.385 1.99a.5.5 0 0 1-.491.595h-.788a.5.5 0 0 1-.49-.595l.384-1.99a1.5 1.5 0 1 1 2-1.415"/></svg> Conexión cifrada · La sesión expira en 8 horas</p>
+  </main>
+</div>
+<script src="js/app.js"></script>
+</body>
+</html>
