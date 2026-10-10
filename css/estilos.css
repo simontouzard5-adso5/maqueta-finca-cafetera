@@ -126,9 +126,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .total span { font-size: var(--fs-ayuda); opacity: .9; text-align: right; }
 
 /* Filtros */
-.filtros { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; align-items: end; }
+.filtros { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .5rem; align-items: end; }
 .filtros .completo { grid-column: 1 / -1; }
 .filtros .form-label { font-size: var(--fs-ayuda); margin-bottom: .2rem; }
+.filtros .form-control, .filtros .btn { width: 100%; min-width: 0; }
 
 /* Formularios */
 .form-label { font-size: var(--fs-etiqueta); font-weight: 600; margin-bottom: .35rem; display: block; }
