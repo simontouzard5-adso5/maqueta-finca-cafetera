@@ -269,3 +269,29 @@ export async function cambiarClave(clave) {
   revisar(await sb.rpc('fn_marcar_clave_cambiada'));
   olvidarPerfil();
 }
+
+/* ---------------- Reiniciar la aplicación ---------------- */
+export async function contarRegistros() {
+  const contar = async tabla => {
+    const { count, error } = await sb.from(tabla).select('id', { count: 'exact', head: true });
+    if (error) throw error;
+    return count ?? 0;
+  };
+  const [produccion, gastos, ventas, compradores, perfiles] = await Promise.all(
+    ['produccion', 'gastos', 'ventas', 'compradores', 'perfiles'].map(contar));
+  return { produccion, gastos, ventas, compradores, usuarios: Math.max(0, perfiles - 1) };
+}
+
+export async function reiniciarApp(datos) {
+  const { data, error } = await sb.functions.invoke('reiniciar-app', { body: datos });
+  if (error) {
+    let detalle = null;
+    try { detalle = await error.context.json(); } catch {}
+    throw new Error(detalle?.error || (/Failed to send|fetch/i.test(error.message)
+      ? 'No se pudo contactar el servicio de reinicio. ¿Ya publicó la función "reiniciar-app" en Supabase?'
+      : error.message));
+  }
+  if (data?.error) throw new Error(data.error);
+  try { localStorage.removeItem(CLAVE_PENDIENTES); } catch {}
+  return data.resultado;
+}

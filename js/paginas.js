@@ -518,6 +518,32 @@ async function paginaNuevaClave() {
   });
 }
 
+async function paginaReiniciar() {
+  const form = $('form.formulario');
+  const pintar = c => $$('[data-conteo]').forEach(el => { el.textContent = c[el.dataset.conteo].toLocaleString('es-CO'); });
+  pintar(await api.contarRegistros());
+
+  alEnviar(form, async boton => {
+    if ($('#frase').value.trim().toUpperCase() !== 'BORRAR TODO') return errorCampo('frase', 'Escriba exactamente BORRAR TODO.');
+    const extra = [$('#borrar-compradores').checked && 'los compradores', $('#borrar-usuarios').checked && 'los demás usuarios'].filter(Boolean);
+    if (!confirm('Último aviso: se borrarán toda la producción, los gastos y las ventas'
+      + (extra.length ? ', y también ' + extra.join(' y ') : '') + '. Esto no se puede deshacer. ¿Continuar?')) return;
+    boton.textContent = 'Borrando…';
+    const r = await api.reiniciarApp({
+      frase: $('#frase').value.trim(),
+      clave: $('#clave-confirmar-reinicio').value,
+      borrar_compradores: $('#borrar-compradores').checked,
+      borrar_usuarios: $('#borrar-usuarios').checked,
+    });
+    form.reset();
+    const partes = [pl(r.produccion, 'registro de producción', 'registros de producción'), pl(r.gastos, 'gasto', 'gastos'), pl(r.ventas, 'venta', 'ventas')];
+    if (r.compradores !== undefined) partes.push(pl(r.compradores, 'comprador', 'compradores'));
+    if (r.usuarios !== undefined) partes.push(pl(r.usuarios, 'usuario', 'usuarios'));
+    aviso('ok', `Listo, la aplicación quedó en ceros. Se borraron: ${partes.join(', ')}.`, form);
+    pintar(await api.contarRegistros());
+  });
+}
+
 /* ---------------- Mapa: página → roles permitidos y función ---------------- */
 const ADMIN = ['admin'], DUENO = ['dueno'], TODOS = ['admin', 'dueno'];
 const PAGINAS = {
@@ -535,6 +561,7 @@ const PAGINAS = {
   'usuarios.html':                   { roles: ADMIN, fn: paginaUsuarios },
   'registrar-usuario.html':          { roles: ADMIN, fn: paginaRegistrarUsuario },
   'mas.html':                        { roles: ADMIN, fn: paginaMas },
+  'reiniciar.html':                  { roles: ADMIN, fn: paginaReiniciar },
   'panel-dueno.html':                { roles: DUENO, fn: paginaPanel },
   'consultar-produccion-dueno.html': { roles: DUENO, fn: paginaConsultarProduccion },
   'consultar-gastos.html':           { roles: DUENO, fn: paginaConsultarGastos },

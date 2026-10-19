@@ -79,7 +79,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .pestanas a[aria-current="page"] { background: var(--superficie); color: var(--color-2); box-shadow: 0 1px 3px rgba(43,33,24,.12); }
 
 /* Botones */
-.btn-primario, .btn-secundario {
+.btn-primario, .btn-secundario, .btn-peligro {
   min-height: var(--toque); border-radius: var(--radio); font-weight: 600; font-size: var(--fs-cuerpo); padding: .7rem 1.25rem; width: 100%;
   display: inline-flex; align-items: center; justify-content: center; gap: .5rem; text-decoration: none; cursor: pointer;
   transition: background-color var(--transicion), transform var(--transicion);
@@ -246,6 +246,13 @@ legend { font-size: var(--fs-ayuda); font-weight: 700; color: var(--color-2); te
 .boton-estado:hover { background: var(--fondo-2); }
 .lista .etiqueta { margin-left: auto; }
 button:disabled { opacity: .65; cursor: progress; }
+
+.btn-peligro { background: var(--color-alerta); color: #fff; border: 0; }
+.btn-peligro:hover { background: #8F1E18; color: #fff; }
+.marca-tipo.marca-peligro { background: var(--rojo-claro); color: var(--color-alerta); }
+.conteos { list-style: none; margin: .5rem 0 .75rem; padding: 0; }
+.conteos li { display: flex; justify-content: space-between; padding: .45rem 0; border-bottom: 1px solid var(--linea); font-size: var(--fs-etiqueta); }
+.conteos li:last-child { border-bottom: 0; }
 
 @media print {
   .barra-app, .nav-inferior, .acciones-hoja { display: none !important; }
