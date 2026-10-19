@@ -271,6 +271,9 @@ button:disabled { opacity: .65; cursor: progress; }
 .editar-lote { display: flex; gap: .4rem; width: 100%; }
 .editar-lote .form-control { min-height: 40px; }
 
+/* Botón Mostrar/Ocultar contraseña: ancho fijo para que el campo no cambie de tamaño */
+.input-group-text[data-mostrar] { width: 6.5rem; justify-content: center; flex: none; }
+
 @media print {
   .barra-app, .nav-inferior, .acciones-hoja { display: none !important; }
   body, .app { background: #fff; }
