@@ -3,6 +3,18 @@
    formularios con mensajes en lenguaje cotidiano y cálculo del valor de la venta.
    La conexión con la base de datos está en js/api.js y js/paginas.js. */
 
+/* Cuando la app se abre desde el ícono instalado (modo app), las barras del celular van en café
+   para que los botones del sistema (◁ ○ □) se vean. En Chrome normal siguen en blanco. */
+(function () {
+  try {
+    const modoApp = matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches;
+    if (!modoApp) return;
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', '#5D3A1A');
+    document.documentElement.classList.add('modo-app');
+  } catch {}
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
 
   // Mostrar u ocultar la contraseña

@@ -274,6 +274,9 @@ button:disabled { opacity: .65; cursor: progress; }
 /* Botón Mostrar/Ocultar contraseña: ancho fijo para que el campo no cambie de tamaño */
 .input-group-text[data-mostrar] { width: 6.5rem; justify-content: center; flex: none; }
 
+/* Modo app instalada: el fondo bajo la barra de navegación del celular va en café */
+.modo-app, .modo-app body { background-color: #5D3A1A; }
+
 @media print {
   .barra-app, .nav-inferior, .acciones-hoja { display: none !important; }
   body, .app { background: #fff; }
