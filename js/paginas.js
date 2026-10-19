@@ -608,6 +608,74 @@ async function paginaReiniciar() {
   });
 }
 
+async function paginaLotes() {
+  const form = $('form.form-lote-nuevo');
+  const lista = $('ul.lista-lotes');
+  let lotes = [], conteo = {};
+  const cargar = async () => {
+    [lotes, conteo] = await Promise.all([api.listarLotes(), api.produccionPorLote()]);
+    subtituloEncabezado(pl(lotes.length, 'lote', 'lotes'));
+    lista.innerHTML = lotes.length ? lotes.map(l => `<li data-id="${l.id}">
+        <span class="marca-tipo">${ICONOS.produccion}</span>
+        <span class="detalle">${api.esc(api.nombreLote(l))}<small>${conteo[l.id] ? pl(conteo[l.id], 'registro de producción', 'registros de producción') : 'Sin producción registrada'}</small></span>
+        <span class="acciones-lote">
+          <button type="button" class="boton-estado" data-accion="editar">Editar</button>
+          <button type="button" class="boton-estado peligro" data-accion="eliminar">Eliminar</button>
+        </span></li>`).join('')
+      : listaVacia('Todavía no hay lotes. Agregue el primero arriba.');
+  };
+
+  alEnviar(form, async () => {
+    const nombre = $('#nombre-lote').value.trim();
+    if (nombre.length < 2) return errorCampo('nombre-lote', 'Escriba el nombre del lote (mínimo 2 letras).');
+    const l = await api.crearLote(nombre);
+    $('#nombre-lote').value = '';
+    await cargar();
+    aviso('ok', `Lote agregado: ${api.esc(api.nombreLote(l))}`, $('main'));
+  });
+
+  lista.addEventListener('click', async e => {
+    const b = e.target.closest('button[data-accion], button[data-guardar], button[data-cancelar]');
+    if (!b) return;
+    const li = b.closest('li'); const id = Number(li.dataset.id);
+    const lote = lotes.find(l => l.id === id);
+    try {
+      if (b.dataset.accion === 'editar') {
+        li.innerHTML = `<form class="editar-lote" novalidate>
+            <label class="visually-hidden" for="editar-${id}">Nuevo nombre del lote ${lote.numero}</label>
+            <input class="form-control" id="editar-${id}" maxlength="60" value="${api.esc(lote.nombre)}">
+            <button type="submit" class="boton-estado" data-guardar>Guardar</button>
+            <button type="button" class="boton-estado" data-cancelar>Cancelar</button>
+          </form>`;
+        const input = $('input', li); input.focus(); input.select();
+        $('form', li).addEventListener('submit', ev => { ev.preventDefault(); $('[data-guardar]', li).click(); });
+        return;
+      }
+      if (b.hasAttribute('data-cancelar')) return cargar();
+      if (b.hasAttribute('data-guardar')) {
+        const nombre = $('input', li).value.trim();
+        if (nombre.length < 2) { aviso('error', 'El nombre del lote debe tener al menos 2 letras.', $('main')); return; }
+        await ocupado(b, '…', () => api.renombrarLote(id, nombre));
+        await cargar();
+        aviso('ok', `Lote ${lote.numero} ahora se llama "${api.esc(nombre)}".`, $('main'));
+        return;
+      }
+      if (b.dataset.accion === 'eliminar') {
+        const n = conteo[id] || 0;
+        const msg = n
+          ? `El lote "${lote.nombre}" tiene ${pl(n, 'registro', 'registros')} de producción. No se borrará: se ocultará de la lista y su historial se conserva en los reportes. ¿Continuar?`
+          : `¿Eliminar el lote "${lote.nombre}"? Esta acción no se puede deshacer.`;
+        if (!confirm(msg)) return;
+        const r = await ocupado(b, '…', () => api.eliminarLote(id));
+        await cargar();
+        aviso('ok', r === 'ocultado' ? `El lote "${api.esc(lote.nombre)}" se ocultó. Su historial se conserva.` : `El lote "${api.esc(lote.nombre)}" se eliminó.`, $('main'));
+      }
+    } catch (err) { aviso('error', api.esc(api.mensajeError(err)), $('main')); }
+  });
+
+  await cargar();
+}
+
 /* ---------------- Mapa: página → roles permitidos y función ---------------- */
 const ADMIN = ['admin'], DUENO = ['dueno'], TODOS = ['admin', 'dueno'];
 const PAGINAS = {
@@ -623,6 +691,7 @@ const PAGINAS = {
   'generar-reporte.html':            { roles: ADMIN, fn: paginaGenerarReporte },
   'resumen-financiero.html':         { roles: ADMIN, fn: paginaResumen },
   'usuarios.html':                   { roles: ADMIN, fn: paginaUsuarios },
+  'lotes.html':                      { roles: ADMIN, fn: paginaLotes },
   'registrar-usuario.html':          { roles: ADMIN, fn: paginaRegistrarUsuario },
   'mas.html':                        { roles: ADMIN, fn: paginaMas },
   'reiniciar.html':                  { roles: ADMIN, fn: paginaReiniciar },

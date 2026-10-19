@@ -261,6 +261,15 @@ button:disabled { opacity: .65; cursor: progress; }
 .segmentos-texto label { min-height: 56px; padding: .4rem; line-height: 1.2; }
 .mensaje-suelto:not(:empty) { display: flex; }
 
+.enlace-pequeno { display: inline-block; margin-top: .4rem; font-size: var(--fs-ayuda); text-align: left; }
+.btn-en-grupo { width: auto; min-height: 0; padding: 0 1rem; border-radius: 0 var(--radio) var(--radio) 0; }
+.lista-lotes li { flex-wrap: wrap; }
+.acciones-lote { display: flex; gap: .4rem; margin-left: auto; }
+.boton-estado.peligro { border-color: var(--color-alerta); color: var(--color-alerta); }
+.boton-estado.peligro:hover { background: var(--rojo-claro); }
+.editar-lote { display: flex; gap: .4rem; width: 100%; }
+.editar-lote .form-control { min-height: 40px; }
+
 @media print {
   .barra-app, .nav-inferior, .acciones-hoja { display: none !important; }
   body, .app { background: #fff; }

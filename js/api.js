@@ -167,6 +167,15 @@ export async function crearLote(nombre) {
   return revisar(await sb.rpc('fn_crear_lote', { p_nombre: nombre.trim() }));
 }
 
+export const renombrarLote = async (id, nombre) =>
+  revisar(await sb.rpc('fn_renombrar_lote', { p_id: id, p_nombre: nombre.trim() }));
+export const eliminarLote = async id => revisar(await sb.rpc('fn_eliminar_lote', { p_id: id }));
+/* Cuántos registros de producción tiene cada lote: { lote_id: cantidad } */
+export async function produccionPorLote() {
+  const filas = revisar(await sb.from('produccion').select('lote_id'));
+  return filas.reduce((m, f) => { m[f.lote_id] = (m[f.lote_id] || 0) + 1; return m; }, {});
+}
+
 export const nombreLote = l => l ? `Lote ${l.numero} · ${l.nombre}` : 'Lote';
 
 /* ---------------- Producción ---------------- */
