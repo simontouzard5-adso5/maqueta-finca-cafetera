@@ -23,10 +23,9 @@
       <a href="registrar-venta.html" aria-current="page">Registrar</a>
     </nav>
     <form class="formulario" data-validar novalidate>
-      <div class="aviso aviso-ok" hidden tabindex="-1"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false">  <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425z"/></svg><span>Venta guardada correctamente.</span></div>
     <div class="campo">
       <label class="form-label" for="comprador">Comprador <span class="obligatorio" aria-hidden="true">*</span></label>
-      <select class="form-select" id="comprador" required data-mensaje="Elija el comprador." aria-describedby="comprador-error"><option value="">Seleccione un comprador</option><option selected>Cooperativa de Caficultores</option><option>Trilladora El Arriero</option></select>
+      <select class="form-select" id="comprador" required data-mensaje="Elija el comprador." aria-describedby="comprador-error"><option value="">Seleccione un comprador</option><option>Cooperativa de Caficultores</option><option>Trilladora El Arriero</option></select>
       <div class="mensaje-error" id="comprador-error" aria-live="polite"></div>
     </div>
     <div class="campo">
@@ -46,7 +45,7 @@
       <div class="mensaje-error" id="precio-kg-error" aria-live="polite"></div>
     </div>
       </div>
-      <div class="total-calculado"><small>Valor total calculado</small><output id="valor-total" for="cantidad-venta precio-kg" aria-live="polite">$ 2.220.000</output></div>
+      <div class="total-calculado"><small>Valor total calculado</small><output id="valor-total" for="cantidad-venta precio-kg" aria-live="polite">$ 0</output></div>
       <button class="btn-primario" type="submit">Guardar venta</button>
     </form>
   </main>
@@ -59,5 +58,6 @@
   </nav>
 </div>
 <script src="js/app.js"></script>
+<script type="module" src="js/paginas.js"></script>
 </body>
 </html>

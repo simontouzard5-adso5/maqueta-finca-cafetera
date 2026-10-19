@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#5D3A1A">
+  <title>Nueva contraseña · Finca Cafetera</title>
+  <link rel="icon" href="img/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="vendor/bootstrap.min.css">
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+<div class="app">
+  <a class="saltar" href="#contenido">Saltar al contenido</a>
+  <header class="barra-app con-volver">
+    <a class="boton-icono" href="index.html" aria-label="Volver"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false">  <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/></svg></a>
+    <h1>Nueva contraseña</h1>
+  </header>
+  <main id="contenido" class="contenido">
+    <p class="saludo">Cree una contraseña nueva para su cuenta.</p>
+    <form class="formulario" data-validar novalidate>
+      <div class="campo">
+      <label class="form-label" for="clave-nueva">Contraseña nueva <span class="obligatorio" aria-hidden="true">*</span></label>
+      <div class="input-group">
+        <input class="form-control" id="clave-nueva" type="password" autocomplete="new-password" required data-mensaje="Escriba la contraseña nueva." aria-describedby="clave-nueva-ayuda clave-nueva-error">
+        <button class="input-group-text" type="button" data-mostrar="clave-nueva" aria-pressed="false">Mostrar</button>
+      </div>
+      <div class="form-text" id="clave-nueva-ayuda">Mínimo 8 caracteres, con letras y números.</div>
+      <div class="mensaje-error" id="clave-nueva-error" aria-live="polite"></div>
+    </div>
+    <div class="campo">
+      <label class="form-label" for="clave-confirmar">Repita la contraseña <span class="obligatorio" aria-hidden="true">*</span></label>
+      <input class="form-control" id="clave-confirmar" type="password" autocomplete="new-password" required data-mensaje="Repita la contraseña nueva." aria-describedby="clave-confirmar-error">
+      <div class="mensaje-error" id="clave-confirmar-error" aria-live="polite"></div>
+    </div>
+      <button class="btn-primario" type="submit">Guardar contraseña</button>
+    </form>
+  </main>
+</div>
+<script src="js/app.js"></script>
+<script type="module" src="js/paginas.js"></script>
+</body>
+</html>

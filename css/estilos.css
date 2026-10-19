@@ -235,6 +235,18 @@ legend { font-size: var(--fs-ayuda); font-weight: 700; color: var(--color-2); te
   .app { min-height: calc(100vh - 48px); border-radius: 24px; overflow: hidden; box-shadow: 0 20px 50px rgba(43,33,24,.18); }
   .nav-inferior { bottom: 24px; border-radius: 0 0 24px 24px; }
 }
+/* ---------- Conexión con la base de datos ---------- */
+[hidden] { display: none !important; }
+.aviso-error { background: var(--rojo-claro); color: var(--color-alerta); border: 1px solid #EBB8B3; font-weight: 600; }
+.aviso a { color: inherit; text-decoration: underline; }
+.aviso .clave-temporal { font-family: ui-monospace, Menlo, monospace; font-size: 1.1em; letter-spacing: .05em; user-select: all; }
+.lista li.vacio { justify-content: center; color: var(--texto-2); font-size: var(--fs-etiqueta); padding: 1.1rem 1rem; }
+.kpi.perdida strong, .kpi.perdida span { color: var(--color-alerta); }
+.boton-estado { margin-left: auto; flex: none; min-height: 36px; padding: 0 .8rem; border-radius: 18px; border: 1.5px solid var(--color-2); background: var(--superficie); color: var(--color-2); font-size: var(--fs-ayuda); font-weight: 600; }
+.boton-estado:hover { background: var(--fondo-2); }
+.lista .etiqueta { margin-left: auto; }
+button:disabled { opacity: .65; cursor: progress; }
+
 @media print {
   .barra-app, .nav-inferior, .acciones-hoja { display: none !important; }
   body, .app { background: #fff; }

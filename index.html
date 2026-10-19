@@ -24,8 +24,7 @@
     <form class="formulario" data-validar data-destino="panel.html" novalidate>
     <div class="campo">
       <label class="form-label" for="correo">Correo electrónico <span class="obligatorio" aria-hidden="true">*</span></label>
-      <input class="form-control" id="correo" type="email" autocomplete="email" required data-mensaje="Escriba su correo para continuar." aria-describedby="correo-ayuda correo-error" placeholder="nombre@correo.com">
-      <div class="form-text" id="correo-ayuda">Para la demostración: admin@finca.co (Administrador) o dueno@finca.co (Dueño)</div>
+      <input class="form-control" id="correo" type="email" autocomplete="email" required data-mensaje="Escriba su correo para continuar." aria-describedby="correo-error" placeholder="nombre@correo.com">
       <div class="mensaje-error" id="correo-error" aria-live="polite"></div>
     </div>
     <div class="campo">
@@ -44,5 +43,6 @@
   </main>
 </div>
 <script src="js/app.js"></script>
+<script type="module" src="js/paginas.js"></script>
 </body>
 </html>
