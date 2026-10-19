@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
     while (pos < nuevo.length && vistos < significativos) { if (/[\d,]/.test(nuevo[pos])) vistos++; pos++; }
     try { campo.setSelectionRange(pos, pos); } catch {}
   };
-  [['valor', false], ['precio-kg', false], ['kilos', true], ['cantidad-venta', true]].forEach(([id, conDecimal]) => {
+  [['valor', false], ['precio-kg', false], ['kilos', true], ['cantidad-venta', true], ['cantidad-insumo', true]].forEach(([id, conDecimal]) => {
     const campo = document.getElementById(id);
     if (!campo) return;
     campo.setAttribute('inputmode', conDecimal ? 'decimal' : 'numeric');
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let primero = null;
       form.querySelectorAll('[data-mensaje]').forEach(campo => {
         const grupo = campo.closest('.campo');
-        if (!grupo || grupo.hidden) return;
+        if (!grupo || grupo.closest('[hidden]')) return;
         const valor = campo.value.trim();
         let error = '';
         if (campo.required && !valor) error = campo.dataset.mensaje;

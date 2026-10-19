@@ -14,6 +14,11 @@ export const HORAS_SESION = 8;
 export const ROLES = { admin: 'Administrador de finca', dueno: 'Dueño de finca' };
 export const PANEL = { admin: 'panel.html', dueno: 'panel-dueno.html' };
 export const TIPOS_GASTO = { insumos: 'Insumos', mano_obra: 'Mano de obra', transporte: 'Transporte' };
+export const CLASES_INSUMO = { herramienta: 'Herramienta', materiales: 'Materiales', produccion: 'Insumos de producción' };
+export const UNIDADES = { kg: 'kg', g: 'g', l: 'L', unidad: 'unid.' };
+/* "50 kg", "2 L", "3 unid." */
+export const cantidadUnidad = g => g.cantidad == null ? '' :
+  Number(g.cantidad).toLocaleString('es-CO', { maximumFractionDigits: 2 }) + ' ' + (UNIDADES[g.unidad] || '');
 
 /* ---------------- Formatos ---------------- */
 export const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -208,7 +213,7 @@ export async function enviarPendientes(perfil) {
 
 /* ---------------- Gastos ---------------- */
 export async function listarGastos(desde, hasta, tipo) {
-  let q = sb.from('gastos').select('id, tipo, descripcion, valor, fecha').gte('fecha', desde).lte('fecha', hasta);
+  let q = sb.from('gastos').select('id, tipo, descripcion, valor, fecha, proveedor, clase_insumo, cantidad, unidad').gte('fecha', desde).lte('fecha', hasta);
   if (tipo) q = q.eq('tipo', tipo);
   return revisar(await q.order('fecha', { ascending: false }).order('id', { ascending: false }));
 }

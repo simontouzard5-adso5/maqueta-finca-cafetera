@@ -34,6 +34,35 @@
           <input type="radio" name="tipo" id="t3"><label for="t3"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false">  <path d="M0 3.5A1.5 1.5 0 0 1 1.5 2h9A1.5 1.5 0 0 1 12 3.5V5h1.02a1.5 1.5 0 0 1 1.17.563l1.481 1.85a1.5 1.5 0 0 1 .329.938V10.5a1.5 1.5 0 0 1-1.5 1.5H14a2 2 0 1 1-4 0H5a2 2 0 1 1-3.998-.085A1.5 1.5 0 0 1 0 10.5zm1.294 7.456A2 2 0 0 1 4.732 11h5.536a2 2 0 0 1 .732-.732V3.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .294.456M12 10a2 2 0 0 1 1.732 1h.768a.5.5 0 0 0 .5-.5V8.35a.5.5 0 0 0-.11-.312l-1.48-1.85A.5.5 0 0 0 13.02 6H12zm-9 1a1 1 0 1 0 0 2 1 1 0 0 0 0-2m9 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2"/></svg>Transporte</label>
         </div>
       </fieldset>
+      <div id="detalle-insumo" class="detalle-insumo">
+        <fieldset>
+          <legend>Clase de insumo <span class="obligatorio" aria-hidden="true">*</span></legend>
+          <div class="segmentos segmentos-texto">
+            <input type="radio" name="clase" id="c1" value="herramienta"><label for="c1">Herramienta</label>
+            <input type="radio" name="clase" id="c2" value="materiales"><label for="c2">Materiales</label>
+            <input type="radio" name="clase" id="c3" value="produccion"><label for="c3">Insumos de producción</label>
+          </div>
+          <div class="mensaje-error mensaje-suelto" id="clase-error" aria-live="polite"></div>
+        </fieldset>
+    <div class="campo">
+      <label class="form-label" for="proveedor">Proveedor <span class="obligatorio" aria-hidden="true">*</span></label>
+      <input class="form-control" id="proveedor" maxlength="120" autocomplete="organization" required data-mensaje="Escriba el nombre o la razón social del proveedor." aria-describedby="proveedor-ayuda proveedor-error" placeholder="Ej.: Agroinsumos del Quindío S.A.S.">
+      <div class="form-text" id="proveedor-ayuda">Nombre o razón social de donde se compró.</div>
+      <div class="mensaje-error" id="proveedor-error" aria-live="polite"></div>
+    </div>
+      <div class="dos">
+    <div class="campo">
+      <label class="form-label" for="cantidad-insumo">Cantidad <span class="obligatorio" aria-hidden="true">*</span></label>
+      <input class="form-control" id="cantidad-insumo" inputmode="decimal" required data-minimo="1" data-mensaje="Escriba la cantidad comprada." aria-describedby="cantidad-insumo-error" placeholder="0">
+      <div class="mensaje-error" id="cantidad-insumo-error" aria-live="polite"></div>
+    </div>
+    <div class="campo">
+      <label class="form-label" for="unidad">Unidad <span class="obligatorio" aria-hidden="true">*</span></label>
+      <select class="form-select" id="unidad" required data-mensaje="Elija la unidad." aria-describedby="unidad-error"><option value="">Elija</option><option value="kg">Kilogramos</option><option value="g">Gramos</option><option value="l">Litros</option><option value="unidad">Unidades</option></select>
+      <div class="mensaje-error" id="unidad-error" aria-live="polite"></div>
+    </div>
+      </div>
+      </div>
     <div class="campo">
       <label class="form-label" for="desc">Descripción <span class="obligatorio" aria-hidden="true">*</span></label>
       <input class="form-control" id="desc" required data-mensaje="Describa el gasto, por ejemplo abono para el lote 2." aria-describedby="desc-error" placeholder="Ej.: abono para el lote 2">

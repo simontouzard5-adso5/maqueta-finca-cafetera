@@ -254,6 +254,10 @@ button:disabled { opacity: .65; cursor: progress; }
 .conteos li { display: flex; justify-content: space-between; padding: .45rem 0; border-bottom: 1px solid var(--linea); font-size: var(--fs-etiqueta); }
 .conteos li:last-child { border-bottom: 0; }
 
+.detalle-insumo { display: flex; flex-direction: column; gap: inherit; border-left: 3px solid var(--verde-claro); padding-left: .85rem; }
+.segmentos-texto label { min-height: 56px; padding: .4rem; line-height: 1.2; }
+.mensaje-suelto:not(:empty) { display: flex; }
+
 @media print {
   .barra-app, .nav-inferior, .acciones-hoja { display: none !important; }
   body, .app { background: #fff; }

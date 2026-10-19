@@ -272,15 +272,44 @@ async function paginaConsultarProduccion() {
 async function paginaRegistrarGasto(perfil) {
   const form = $('form.formulario');
   const tipos = { t1: 'insumos', t2: 'mano_obra', t3: 'transporte' };
+  const detalle = $('#detalle-insumo');
   fijarHoy('fecha-g');
+
+  // Los datos del insumo (clase, proveedor, cantidad y unidad) solo se piden para "Insumos"
+  const mostrarDetalle = () => { detalle.hidden = !$('#t1').checked; };
+  $$('input[name="tipo"]').forEach(r => r.addEventListener('change', mostrarDetalle));
+  $$('input[name="clase"]').forEach(r => r.addEventListener('change', () => { $('#clase-error').textContent = ''; }));
+  mostrarDetalle();
+
   alEnviar(form, async () => {
     const valor = api.numero($('#valor').value);
     if (!(valor > 0) || !Number.isInteger(valor)) return errorCampo('valor', 'Escriba el valor en pesos, sin decimales. Ej.: 320.000');
     if ($('#fecha-g').value > api.hoyISO()) return errorCampo('fecha-g', 'La fecha no puede ser posterior a hoy.');
     const tipo = tipos[$('input[name="tipo"]:checked').id];
-    await api.registrarGasto({ tipo, descripcion: $('#desc').value.trim(), valor, fecha: $('#fecha-g').value }, perfil);
-    aviso('ok', `Gasto guardado: ${api.esc($('#desc').value.trim())} · ${api.pesos(valor)}`, form);
+    const gasto = { tipo, descripcion: $('#desc').value.trim(), valor, fecha: $('#fecha-g').value };
+
+    if (tipo === 'insumos') {
+      const clase = $('input[name="clase"]:checked');
+      if (!clase) { $('#clase-error').textContent = 'Elija si es herramienta, materiales o insumos de producción.'; $('#c1').focus(); return; }
+      const cantidad = api.numero($('#cantidad-insumo').value);
+      if (!(cantidad > 0)) return errorCampo('cantidad-insumo', 'La cantidad debe ser mayor que cero.');
+      Object.assign(gasto, {
+        clase_insumo: clase.value,
+        proveedor: $('#proveedor').value.trim(),
+        cantidad,
+        unidad: $('#unidad').value,
+      });
+    }
+
+    await api.registrarGasto(gasto, perfil);
+    const extra = tipo === 'insumos' ? ` · ${api.esc(api.cantidadUnidad(gasto))} · ${api.esc(gasto.proveedor)}` : '';
+    aviso('ok', `Gasto guardado: ${api.esc(gasto.descripcion)}${extra} · ${api.pesos(valor)}`, form);
     $('#desc').value = ''; $('#valor').value = '';
+    if (tipo === 'insumos') {
+      $('#cantidad-insumo').value = ''; $('#unidad').value = '';
+      $$('input[name="clase"]').forEach(r => { r.checked = false; });
+      // el proveedor se deja escrito, por si el siguiente insumo es del mismo lugar
+    }
   });
 }
 
@@ -293,7 +322,12 @@ async function paginaConsultarGastos() {
     $('.total strong').textContent = api.pesos(filas.reduce((s, g) => s + Number(g.valor), 0));
     $('.total > span').textContent = `${pl(filas.length, 'gasto', 'gastos')}`;
     lista.innerHTML = filas.length
-      ? filas.map(g => itemLista({ icono: ICONOS[g.tipo], titulo: g.descripcion, sub: `${api.TIPOS_GASTO[g.tipo]} · ${api.fechaCorta(g.fecha)}`, valor: api.pesos(g.valor) })).join('')
+      ? filas.map(g => itemLista({
+          icono: ICONOS[g.tipo], titulo: g.descripcion,
+          sub: [api.TIPOS_GASTO[g.tipo], g.clase_insumo && api.CLASES_INSUMO[g.clase_insumo], api.fechaCorta(g.fecha)].filter(Boolean).join(' · '),
+          valor: api.pesos(g.valor),
+          valorSub: g.proveedor ? `${api.esc(api.cantidadUnidad(g))} · ${api.esc(g.proveedor)}` : '',
+        })).join('')
       : listaVacia('No hay gastos registrados en estas fechas.');
   }, 'gastos');
   $('#tipo-g').addEventListener('change', ejecutar);
@@ -445,7 +479,7 @@ async function paginaVistaPrevia(perfil) {
     const total = filas.reduce((s, g) => s + Number(g.valor), 0);
     tabla.innerHTML = `<caption>Gastos por fecha y tipo</caption>
       <thead><tr><th scope="col">Fecha</th><th scope="col">Descripción</th><th scope="col">Tipo</th><th scope="col" class="num">Valor</th></tr></thead>
-      <tbody>${filas.map(g => `<tr><td>${dm(g.fecha)}</td><td>${e(g.descripcion)}</td><td>${api.TIPOS_GASTO[g.tipo]}</td><td class="num">${api.pesos(g.valor)}</td></tr>`).join('') || '<tr><td colspan="4">Sin registros en este período.</td></tr>'}</tbody>
+      <tbody>${filas.map(g => `<tr><td>${dm(g.fecha)}</td><td>${e(g.descripcion)}${g.proveedor ? `<br><small>${e(api.cantidadUnidad(g))} · ${e(g.proveedor)}</small>` : ''}</td><td>${api.TIPOS_GASTO[g.tipo]}${g.clase_insumo ? `<br><small>${api.CLASES_INSUMO[g.clase_insumo]}</small>` : ''}</td><td class="num">${api.pesos(g.valor)}</td></tr>`).join('') || '<tr><td colspan="4">Sin registros en este período.</td></tr>'}</tbody>
       <tfoot><tr><td colspan="3">Total · ${pl(filas.length, 'gasto', 'gastos')}</td><td class="num">${api.pesos(total)}</td></tr></tfoot>`;
   } else {
     const filas = await api.listarVentas(desde, hasta);
