@@ -210,6 +210,8 @@ async function paginaRegistrarProduccion(perfil) {
   };
   lote.addEventListener('change', () => { campoNuevo.hidden = lote.value !== 'nuevo'; if (!campoNuevo.hidden) $('#lote-nuevo').focus(); });
   await cargarLotes();
+  // Si todavía no hay lotes, se abre directo el campo para crear el primero
+  if (!lotes.length) { lote.value = 'nuevo'; campoNuevo.hidden = false; }
 
   const actualizarBanner = () => {
     const n = api.pendientesProduccion().length;
