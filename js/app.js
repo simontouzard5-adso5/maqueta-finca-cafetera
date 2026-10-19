@@ -24,6 +24,43 @@ document.addEventListener('DOMContentLoaded', () => {
     return /^-?\d+(\.\d+)?$/.test(t) ? Number(t) : NaN;
   };
 
+  // Separador de miles mientras se escribe: 100000 → 100.000 · 1250,5 → 1.250,5
+  // Pesos (sin decimales): #valor, #precio-kg · Kilos (un decimal con coma): #kilos, #cantidad-venta
+  const miles = digitos => digitos.replace(/^0+(?=\d)/, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  const formatear = (campo, conDecimal) => {
+    const antes = campo.value;
+    const cursor = campo.selectionStart ?? antes.length;
+    // cuántos dígitos (y coma) hay antes del cursor, para devolverlo al mismo lugar
+    const significativos = antes.slice(0, cursor).replace(conDecimal ? /[^\d,]/g : /\D/g, '').length;
+    let entero, decimal = null;
+    if (conDecimal) {
+      const limpio = antes.replace(/[^\d,]/g, '');
+      const coma = limpio.indexOf(',');
+      if (coma >= 0) { entero = limpio.slice(0, coma).replace(/,/g, ''); decimal = limpio.slice(coma + 1).replace(/,/g, '').slice(0, 1); }
+      else entero = limpio;
+    } else entero = antes.replace(/\D/g, '');
+    const nuevo = (entero ? miles(entero) : (decimal !== null ? '0' : '')) + (decimal !== null ? ',' + decimal : '');
+    if (nuevo === antes) return;
+    campo.value = nuevo;
+    let pos = 0, vistos = 0;
+    while (pos < nuevo.length && vistos < significativos) { if (/[\d,]/.test(nuevo[pos])) vistos++; pos++; }
+    try { campo.setSelectionRange(pos, pos); } catch {}
+  };
+  [['valor', false], ['precio-kg', false], ['kilos', true], ['cantidad-venta', true]].forEach(([id, conDecimal]) => {
+    const campo = document.getElementById(id);
+    if (!campo) return;
+    campo.setAttribute('inputmode', conDecimal ? 'decimal' : 'numeric');
+    campo.addEventListener('input', e => {
+      // En kilos, si el teclado escribe punto como decimal, se convierte en coma
+      if (conDecimal && e.data === '.' && !campo.value.includes(',')) {
+        const c = campo.selectionStart;
+        campo.value = campo.value.slice(0, c - 1) + ',' + campo.value.slice(c);
+        try { campo.setSelectionRange(c, c); } catch {}
+      }
+      formatear(campo, conDecimal);
+    });
+  });
+
   // Validación de formularios. Si todo está bien, avisa con el evento "formulario-valido"
   // y la lógica de cada pantalla (js/paginas.js) se encarga de guardar.
   document.querySelectorAll('form[data-validar]').forEach(form => {
