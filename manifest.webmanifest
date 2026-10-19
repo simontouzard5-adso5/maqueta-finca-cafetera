@@ -4,10 +4,10 @@
   "lang": "es-CO",
   "start_url": "./index.html",
   "scope": "./",
-  "display": "standalone",
+  "display": "browser",
   "orientation": "portrait",
-  "theme_color": "#5D3A1A",
-  "background_color": "#5D3A1A",
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
   "icons": [
     {
       "src": "img/icono-192.png",
