@@ -1,0 +1,4 @@
+# Archivos de trabajo para la narración del video (no se publican)
+video/voz/
+video/*.command
+.DS_Store
