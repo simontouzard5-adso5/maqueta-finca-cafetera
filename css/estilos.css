@@ -8,7 +8,6 @@
 @font-face { font-family: "Inter"; src: url("../fonts/inter-700.woff2") format("woff2"); font-weight: 700; font-display: swap; }
 
 :root {
-  color-scheme: light;
   /* Color: tres colores con rol fijo */
   --color-1: #2E6B30;          /* verde hoja: acción principal, confirmación, ganancia */
   --color-2: #5D3A1A;          /* café rama: barra superior, encabezados, foco, botón secundario */
