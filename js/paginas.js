@@ -412,7 +412,7 @@ async function paginaResumen() {
   $('small', caja).textContent = `Utilidad neta · ${api.etiquetaRango(desde, hasta).toLowerCase()}`;
   $('strong', caja).textContent = api.pesos(r.utilidad);
   const margen = r.totalVentas ? Math.round(r.utilidad / r.totalVentas * 100) : 0;
-  $(':scope > span', caja).innerHTML = (r.utilidad >= 0 ? '▲ Ganancia' : '▼ Pérdida') + (r.totalVentas ? `<br>margen del ${margen} %` : '<br>sin ventas');
+  $(':scope > span', caja).innerHTML = (r.utilidad >= 0 ? '▲ Ganancia' : '▼ Pérdida') + (r.totalVentas ? `<br>margen del ${margen}&nbsp;%` : '<br>sin ventas');
 
   const kpis = $$('.indicadores .kpi');
   $('strong', kpis[0]).textContent = api.pesos(r.totalVentas); $('span', kpis[0]).textContent = `${pl(r.ventas.length, 'venta', 'ventas')}`;
