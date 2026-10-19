@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#5D3A1A">
+  <meta name="color-scheme" content="light">
+  <title>Prueba de barras · Finca Cafetera</title>
+  <style>
+    :root { color-scheme: light; }
+    body { margin: 0; font-family: system-ui, sans-serif; background: #FAF6F0; color: #2B2118; }
+    main { padding: 20px 16px 120px; display: flex; flex-direction: column; gap: 12px; }
+    h1 { font-size: 1.3rem; margin: 0; }
+    p { margin: 0; line-height: 1.45; }
+    button { font: inherit; font-weight: 600; min-height: 56px; border-radius: 14px; border: 2px solid #5D3A1A; background: #fff; color: #5D3A1A; text-align: left; padding: 0 16px; }
+    button[aria-pressed="true"] { background: #2E6B30; border-color: #2E6B30; color: #fff; }
+    .pie { position: fixed; left: 0; right: 0; bottom: 0; height: 72px; background: var(--pie, #ffffff); border-top: 1px solid #e6ddd2; display: grid; place-items: center; font-size: .85rem; color: #6b5a4a; padding-bottom: env(safe-area-inset-bottom); }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Prueba de los botones del celular</h1>
+  <p>Toque cada opción y mire los botones del sistema (◁ ○ □) abajo de la pantalla. Dígale a Claude <strong>con qué número</strong> se ven oscuros y claros de leer.</p>
+  <button data-tema="#5D3A1A" data-pie="#ffffff">1 · Café arriba, blanco abajo (como está hoy)</button>
+  <button data-tema="#ffffff" data-pie="#ffffff">2 · Blanco arriba y abajo</button>
+  <button data-tema="#FAF6F0" data-pie="#FAF6F0">3 · Crema arriba y abajo</button>
+  <button data-tema="#5D3A1A" data-pie="#5D3A1A">4 · Café arriba y abajo</button>
+  <button data-tema="" data-pie="#ffffff">5 · Sin color de tema</button>
+  <p id="estado"></p>
+</main>
+<div class="pie">Parte de abajo de la página</div>
+<script>
+  const meta = document.querySelector('meta[name=theme-color]');
+  document.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', 'false'));
+    b.setAttribute('aria-pressed', 'true');
+    if (b.dataset.tema) { meta.setAttribute('content', b.dataset.tema); if (!meta.isConnected) document.head.appendChild(meta); }
+    else meta.remove();
+    document.documentElement.style.setProperty('--pie', b.dataset.pie);
+    document.body.style.background = b.dataset.pie === '#5D3A1A' ? '#5D3A1A' : '#FAF6F0';
+    document.getElementById('estado').textContent = 'Opción activa: ' + b.textContent;
+  }));
+</script>
+</body>
+</html>
