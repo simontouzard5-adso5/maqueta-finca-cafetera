@@ -425,7 +425,7 @@ async function paginaVistaPrevia(perfil) {
   document.title = `${titulos[tipo]} · Finca Cafetera`;
   const hoja = $('article.hoja');
   hoja.setAttribute('aria-label', titulos[tipo]);
-  $('.marca', hoja).innerHTML = `<img src="img/logo.svg" alt="">${titulos[tipo]}`;
+  $('.marca', hoja).innerHTML = `<img src="img/logo.png" alt="">${titulos[tipo]}`;
   $('.hoja-encabezado .text-end', hoja).innerHTML = `${api.fechaCorta(desde)}<br>a ${api.fechaCorta(hasta)}`;
   const tabla = $('table', hoja);
   const pie = $('p.form-text', hoja);
