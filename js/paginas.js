@@ -192,8 +192,24 @@ async function paginaRegistrarProduccion(perfil) {
   const bannerSinSenal = $('.aviso-info');
   fijarHoy('fecha');
 
-  const lotes = await api.listarLotes();
-  llenarSelect(lote, lotes.map(l => ({ value: l.id, texto: api.nombreLote(l) })), 'Seleccione un lote');
+  // Campo para escribir un lote que no está en la lista
+  const campoNuevo = document.createElement('div');
+  campoNuevo.className = 'campo';
+  campoNuevo.hidden = true;
+  campoNuevo.innerHTML = `<label class="form-label" for="lote-nuevo">Nombre del lote nuevo <span class="obligatorio" aria-hidden="true">*</span></label>
+    <input class="form-control" id="lote-nuevo" maxlength="60" placeholder="Ej.: La Esperanza" aria-describedby="lote-nuevo-ayuda lote-nuevo-error">
+    <div class="form-text" id="lote-nuevo-ayuda">El número del lote se asigna solo. Quedará guardado para los próximos registros.</div>
+    <div class="mensaje-error" id="lote-nuevo-error" aria-live="polite"></div>`;
+  lote.closest('.campo').after(campoNuevo);
+
+  let lotes = [];
+  const cargarLotes = async () => {
+    lotes = await api.listarLotes();
+    llenarSelect(lote, lotes.map(l => ({ value: l.id, texto: api.nombreLote(l) })), 'Seleccione un lote');
+    lote.insertAdjacentHTML('beforeend', '<option value="nuevo">+ Otro lote…</option>');
+  };
+  lote.addEventListener('change', () => { campoNuevo.hidden = lote.value !== 'nuevo'; if (!campoNuevo.hidden) $('#lote-nuevo').focus(); });
+  await cargarLotes();
 
   const actualizarBanner = () => {
     const n = api.pendientesProduccion().length;
@@ -217,8 +233,17 @@ async function paginaRegistrarProduccion(perfil) {
     if (!(kg > 0)) return errorCampo('kilos', 'La cantidad debe ser un número mayor que cero.');
     if (Math.round(kg * 10) !== kg * 10) return errorCampo('kilos', 'Use máximo un decimal, por ejemplo 485,5.');
     if ($('#fecha').value > api.hoyISO()) return errorCampo('fecha', 'La fecha no puede ser posterior a hoy.');
-    const loteElegido = lotes.find(l => String(l.id) === lote.value);
-    const estado = await api.registrarProduccion({ lote_id: Number(lote.value), fecha: $('#fecha').value, kilos: kg }, perfil);
+    let loteElegido = lotes.find(l => String(l.id) === lote.value);
+    if (lote.value === 'nuevo') {
+      const nombre = $('#lote-nuevo').value.trim();
+      if (nombre.length < 2) return errorCampo('lote-nuevo', 'Escriba el nombre del lote (mínimo 2 letras).');
+      loteElegido = await api.crearLote(nombre);
+      await cargarLotes();
+      lote.value = String(loteElegido.id);
+      campoNuevo.hidden = true;
+      $('#lote-nuevo').value = '';
+    }
+    const estado = await api.registrarProduccion({ lote_id: loteElegido.id, fecha: $('#fecha').value, kilos: kg }, perfil);
     $('#kilos').value = '';
     actualizarBanner();
     if (estado === 'enviado') aviso('ok', `Guardado: ${api.esc(api.nombreLote(loteElegido))} · ${api.kilos(kg)}`, form);

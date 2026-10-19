@@ -151,6 +151,11 @@ export async function crearComprador(nombre, perfil) {
   return revisar(await sb.from('compradores').insert({ nombre: nombre.trim(), creado_por: perfil.id }).select('id, nombre').single());
 }
 
+export async function crearLote(nombre) {
+  if (!navigator.onLine) throw new Error('Para crear un lote nuevo necesita conexión a internet.');
+  return revisar(await sb.rpc('fn_crear_lote', { p_nombre: nombre.trim() }));
+}
+
 export const nombreLote = l => l ? `Lote ${l.numero} · ${l.nombre}` : 'Lote';
 
 /* ---------------- Producción ---------------- */
