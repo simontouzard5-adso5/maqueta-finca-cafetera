@@ -4,7 +4,7 @@
    ejecuta la función que le corresponde.
    ===================================================================== */
 import * as api from './api.js?v=3';
-import { ICONOS } from './iconos.js?v=3';
+import { ICONOS, NAV_ADMIN } from './iconos.js?v=3';
 
 const $ = (sel, raiz = document) => raiz.querySelector(sel);
 const $$ = (sel, raiz = document) => [...raiz.querySelectorAll(sel)];
@@ -629,8 +629,8 @@ const PAGINAS = {
   'panel-dueno.html':                { roles: DUENO, fn: paginaPanel },
   'consultar-produccion-dueno.html': { roles: DUENO, fn: paginaConsultarProduccion },
   'consultar-gastos.html':           { roles: DUENO, fn: paginaConsultarGastos },
-  'consultar-ventas.html':           { roles: DUENO, fn: paginaConsultarVentas },
-  'registrar-venta.html':            { roles: DUENO, fn: paginaRegistrarVenta },
+  'consultar-ventas.html':           { roles: TODOS, fn: paginaConsultarVentas },
+  'registrar-venta.html':            { roles: TODOS, fn: paginaRegistrarVenta },
   'resumen-financiero-dueno.html':   { roles: DUENO, fn: paginaResumen },
   'vista-previa-reporte.html':       { roles: TODOS, fn: paginaVistaPrevia },
 };
@@ -647,6 +647,11 @@ const PAGINAS = {
     const perfil = await api.exigirSesion(config.roles);
     if (!perfil) return;
     document.documentElement.classList.remove('verificando');
+    // En pantallas compartidas (ventas), el administrador ve su propia barra inferior
+    if (perfil.rol === 'admin' && config.roles === TODOS) {
+      const nav = $('.nav-inferior');
+      if (nav) nav.outerHTML = NAV_ADMIN;
+    }
     await config.fn(perfil);
   } catch (e) {
     console.error(e);
