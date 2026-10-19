@@ -291,11 +291,14 @@ async function paginaRegistrarGasto(perfil) {
     if (tipo === 'insumos') {
       const clase = $('input[name="clase"]:checked');
       if (!clase) { $('#clase-error').textContent = 'Elija si es herramienta, materiales o insumos de producción.'; $('#c1').focus(); return; }
+      const documento = $('#documento-proveedor').value.replace(/[.\s]/g, '');
+      if (!/^[0-9]{5,15}(-[0-9])?$/.test(documento)) return errorCampo('documento-proveedor', 'Escriba solo números (5 a 15). Si es NIT, puede agregar el dígito de verificación: 900123456-7');
       const cantidad = api.numero($('#cantidad-insumo').value);
       if (!(cantidad > 0)) return errorCampo('cantidad-insumo', 'La cantidad debe ser mayor que cero.');
       Object.assign(gasto, {
         clase_insumo: clase.value,
         proveedor: $('#proveedor').value.trim(),
+        documento_proveedor: documento,
         cantidad,
         unidad: $('#unidad').value,
       });
@@ -326,7 +329,7 @@ async function paginaConsultarGastos() {
           icono: ICONOS[g.tipo], titulo: g.descripcion,
           sub: [api.TIPOS_GASTO[g.tipo], g.clase_insumo && api.CLASES_INSUMO[g.clase_insumo], api.fechaCorta(g.fecha)].filter(Boolean).join(' · '),
           valor: api.pesos(g.valor),
-          valorSub: g.proveedor ? `${api.esc(api.cantidadUnidad(g))} · ${api.esc(g.proveedor)}` : '',
+          valorSub: g.proveedor ? `${api.esc(api.cantidadUnidad(g))} · ${api.esc(g.proveedor)}${g.documento_proveedor ? ' · ' + api.esc(api.documento(g.documento_proveedor)) : ''}` : '',
         })).join('')
       : listaVacia('No hay gastos registrados en estas fechas.');
   }, 'gastos');
@@ -479,7 +482,7 @@ async function paginaVistaPrevia(perfil) {
     const total = filas.reduce((s, g) => s + Number(g.valor), 0);
     tabla.innerHTML = `<caption>Gastos por fecha y tipo</caption>
       <thead><tr><th scope="col">Fecha</th><th scope="col">Descripción</th><th scope="col">Tipo</th><th scope="col" class="num">Valor</th></tr></thead>
-      <tbody>${filas.map(g => `<tr><td>${dm(g.fecha)}</td><td>${e(g.descripcion)}${g.proveedor ? `<br><small>${e(api.cantidadUnidad(g))} · ${e(g.proveedor)}</small>` : ''}</td><td>${api.TIPOS_GASTO[g.tipo]}${g.clase_insumo ? `<br><small>${api.CLASES_INSUMO[g.clase_insumo]}</small>` : ''}</td><td class="num">${api.pesos(g.valor)}</td></tr>`).join('') || '<tr><td colspan="4">Sin registros en este período.</td></tr>'}</tbody>
+      <tbody>${filas.map(g => `<tr><td>${dm(g.fecha)}</td><td>${e(g.descripcion)}${g.proveedor ? `<br><small>${e(api.cantidadUnidad(g))} · ${e(g.proveedor)}${g.documento_proveedor ? ' · ' + e(api.documento(g.documento_proveedor)) : ''}</small>` : ''}</td><td>${api.TIPOS_GASTO[g.tipo]}${g.clase_insumo ? `<br><small>${api.CLASES_INSUMO[g.clase_insumo]}</small>` : ''}</td><td class="num">${api.pesos(g.valor)}</td></tr>`).join('') || '<tr><td colspan="4">Sin registros en este período.</td></tr>'}</tbody>
       <tfoot><tr><td colspan="3">Total · ${pl(filas.length, 'gasto', 'gastos')}</td><td class="num">${api.pesos(total)}</td></tr></tfoot>`;
   } else {
     const filas = await api.listarVentas(desde, hasta);

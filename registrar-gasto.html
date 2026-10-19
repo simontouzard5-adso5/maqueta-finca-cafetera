@@ -50,6 +50,12 @@
       <div class="form-text" id="proveedor-ayuda">Nombre o razón social de donde se compró.</div>
       <div class="mensaje-error" id="proveedor-error" aria-live="polite"></div>
     </div>
+    <div class="campo">
+      <label class="form-label" for="documento-proveedor">Cédula o NIT <span class="obligatorio" aria-hidden="true">*</span></label>
+      <input class="form-control" id="documento-proveedor" maxlength="20" autocomplete="off" required data-mensaje="Escriba la cédula o el NIT del proveedor." aria-describedby="documento-proveedor-ayuda documento-proveedor-error" placeholder="Ej.: 900.123.456-7">
+      <div class="form-text" id="documento-proveedor-ayuda">Solo números. Si es NIT, puede agregar el dígito de verificación después del guion.</div>
+      <div class="mensaje-error" id="documento-proveedor-error" aria-live="polite"></div>
+    </div>
       <div class="dos">
     <div class="campo">
       <label class="form-label" for="cantidad-insumo">Cantidad <span class="obligatorio" aria-hidden="true">*</span></label>
