@@ -3,8 +3,8 @@
    Cada página HTML carga este archivo; según el nombre de la página se
    ejecuta la función que le corresponde.
    ===================================================================== */
-import * as api from './api.js';
-import { ICONOS } from './iconos.js';
+import * as api from './api.js?v=3';
+import { ICONOS } from './iconos.js?v=3';
 
 const $ = (sel, raiz = document) => raiz.querySelector(sel);
 const $$ = (sel, raiz = document) => [...raiz.querySelectorAll(sel)];
@@ -143,11 +143,15 @@ async function paginaPanel(perfil) {
   $('.titulo-seccion').textContent = `Resumen de ${mes.nombre}`;
   conectarCerrarSesion();
   if (perfil.rol === 'admin') {
-    const enviados = await api.enviarPendientes(perfil).catch(() => 0);
-    if (enviados) aviso('ok', `Se enviaron ${enviados} registro(s) de producción que estaban guardados en el teléfono.`, $('main'));
+    api.enviarPendientes(perfil).catch(() => 0).then(enviados => {
+      if (enviados) aviso('ok', `Se enviaron ${enviados} registro(s) de producción que estaban guardados en el teléfono.`, $('main'));
+    });
   }
 
-  const [r, movimientos] = await Promise.all([api.resumen(mes.desde, mes.hasta), api.ultimosMovimientos(3)]);
+  const hayGrafico = !!$('.grafico');
+  const [r, movimientos, lotesGrafico] = await Promise.all([
+    api.resumen(mes.desde, mes.hasta), api.ultimosMovimientos(3), hayGrafico ? api.listarLotes() : [],
+  ]);
   const kpis = $$('.indicadores .kpi');
   const pon = (i, fuerte, debil) => { $('strong', kpis[i]).textContent = fuerte; $('span', kpis[i]).textContent = debil; };
   pon(0, api.kilos(r.totalKilos), `${pl(r.produccion.length, 'registro', 'registros')}`);
@@ -172,7 +176,7 @@ async function paginaPanel(perfil) {
   // Gráfico de producción por lote (solo en el panel del dueño)
   const grafico = $('.grafico');
   if (grafico) {
-    const lotes = await api.listarLotes();
+    const lotes = lotesGrafico;
     const porLote = lotes.map(l => ({ l, kg: r.produccion.filter(p => p.lote?.id === l.id).reduce((s, p) => s + Number(p.kilos), 0) }));
     const max = Math.max(1, ...porLote.map(x => x.kg));
     const numeroCorto = kg => kg.toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 });

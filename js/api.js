@@ -4,8 +4,8 @@
    La seguridad real la imponen las reglas RLS de la base de datos; lo que
    se valida aquí es solo para dar mensajes claros al usuario.
    ===================================================================== */
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm';
-import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
+import { createClient } from '../vendor/supabase.esm.js?v=3';
+import { SUPABASE_URL, SUPABASE_KEY } from './config.js?v=3';
 
 export const configurado = /^https:\/\//.test(SUPABASE_URL) && !/^PEGUE/.test(SUPABASE_KEY);
 export const sb = configurado ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
@@ -82,14 +82,28 @@ function revisar({ data, error }) {
 /* ---------------- Sesión ---------------- */
 const CLAVE_INICIO = 'finca_inicio_sesion';
 
-export async function obtenerPerfil() {
+/* El perfil se guarda unos minutos en el navegador para no consultarlo en cada pantalla.
+   Es solo para la interfaz: los permisos reales los revisa la base de datos (RLS) en cada consulta. */
+const CLAVE_PERFIL = 'finca_perfil';
+const MINUTOS_PERFIL = 5;
+export function olvidarPerfil() { try { sessionStorage.removeItem(CLAVE_PERFIL); } catch {} }
+
+export async function obtenerPerfil({ usarGuardado = false } = {}) {
   const { data: { session } } = await sb.auth.getSession();
-  if (!session) return null;
+  if (!session) { olvidarPerfil(); return null; }
+  if (usarGuardado) {
+    try {
+      const g = JSON.parse(sessionStorage.getItem(CLAVE_PERFIL) || 'null');
+      if (g && g.perfil.id === session.user.id && Date.now() - g.cuando < MINUTOS_PERFIL * 60000) return g.perfil;
+    } catch {}
+  }
   const perfil = revisar(await sb.from('perfiles').select('*').eq('id', session.user.id).maybeSingle());
+  try { if (perfil) sessionStorage.setItem(CLAVE_PERFIL, JSON.stringify({ perfil, cuando: Date.now() })); } catch {}
   return perfil;
 }
 
 export async function iniciarSesion(correo, clave) {
+  olvidarPerfil();
   revisar(await sb.auth.signInWithPassword({ email: correo, password: clave }));
   const perfil = await obtenerPerfil();
   if (!perfil) { await sb.auth.signOut(); throw new Error('Su cuenta no tiene un perfil asignado. Pida ayuda al administrador.'); }
@@ -99,6 +113,7 @@ export async function iniciarSesion(correo, clave) {
 }
 
 export async function cerrarSesion(destino = 'index.html') {
+  olvidarPerfil();
   try { await sb.auth.signOut(); } catch {}
   try { localStorage.removeItem(CLAVE_INICIO); } catch {}
   location.replace(destino);
@@ -116,7 +131,7 @@ export async function exigirSesion(rolesPermitidos, { permitirCambioClave = fals
     await cerrarSesion('sesion-vencida.html'); return null;
   }
 
-  const perfil = await obtenerPerfil();
+  const perfil = await obtenerPerfil({ usarGuardado: true });
   if (!perfil || !perfil.activo) { await cerrarSesion('index.html?motivo=inactivo'); return null; }
   if (perfil.debe_cambiar_clave && !permitirCambioClave) { location.replace('nueva-clave.html'); return null; }
   if (rolesPermitidos && !rolesPermitidos.includes(perfil.rol)) { location.replace(PANEL[perfil.rol]); return null; }
@@ -252,4 +267,5 @@ export const enviarEnlaceRecuperacion = async correo =>
 export async function cambiarClave(clave) {
   revisar(await sb.auth.updateUser({ password: clave }));
   revisar(await sb.rpc('fn_marcar_clave_cambiada'));
+  olvidarPerfil();
 }
