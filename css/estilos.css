@@ -208,6 +208,14 @@ legend { font-size: var(--fs-ayuda); font-weight: 700; color: var(--color-2); te
 /* Acceso */
 .portada { height: 34vh; min-height: 220px; max-height: 300px; position: relative; overflow: hidden; }
 .portada img.ilustracion { width: 100%; height: 100%; object-fit: cover; object-position: 70% 55%; display: block; }
+/* Sticker de la familia caficultora: entra de izquierda a derecha al abrir la app */
+.portada .sticker-familia { position: absolute; right: 10px; bottom: 30px; height: 72%; width: auto; z-index: 1; filter: drop-shadow(0 6px 12px rgba(43,33,24,.35)); transform-origin: 50% 100%; animation: sticker-entra 1s cubic-bezier(.22,1,.36,1) .25s both; }
+@keyframes sticker-entra {
+  0%   { transform: translateX(-120vw) rotate(-8deg); opacity: 0; }
+  70%  { transform: translateX(6px) rotate(2deg); opacity: 1; }
+  100% { transform: translateX(0) rotate(0); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .portada .sticker-familia { animation: none; } }
 .marca-acceso { position: absolute; left: 1.25rem; top: 1.25rem; display: flex; align-items: center; gap: .65rem; font-weight: 700; color: var(--texto); line-height: 1.2; }
 .marca-acceso img { width: 40px; height: 40px; background: #fff; border-radius: 10px; padding: 4px; box-shadow: 0 2px 8px rgba(43,33,24,.12); }
 .marca-acceso small { display: block; font-weight: 400; font-size: var(--fs-ayuda); color: var(--texto-2); }
