@@ -12,21 +12,27 @@
 // =====================================================================
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+// Solo la aplicación publicada puede llamar a esta función desde el navegador.
+// Si cambia la dirección de la app, actualícela aquí y vuelva a publicar la función.
+const ORIGENES_PERMITIDOS = ["https://finca-cafetera.vercel.app"];
+
+function encabezadosCors(req: Request): Record<string, string> {
+  const origen = req.headers.get("Origin") ?? "";
+  return {
+    "Access-Control-Allow-Origin": ORIGENES_PERMITIDOS.includes(origen) ? origen : ORIGENES_PERMITIDOS[0],
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Vary": "Origin",
+  };
+}
 
 const FRASE = "BORRAR TODO";
 
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const cors = encabezadosCors(req);
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
+  if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   if (req.method !== "POST") return json({ error: "Método no permitido." }, 405);
 
   try {
@@ -99,6 +105,7 @@ Deno.serve(async (req: Request) => {
 
     return json({ ok: true, resultado });
   } catch (e) {
-    return json({ error: "Error inesperado: " + String(e) }, 500);
+    console.error(e);   // el detalle queda en los registros de Supabase, no se muestra al usuario
+    return json({ error: "Ocurrió un error inesperado en el servidor. Intente de nuevo." }, 500);
   }
 });

@@ -3,8 +3,8 @@
    Cada página HTML carga este archivo; según el nombre de la página se
    ejecuta la función que le corresponde.
    ===================================================================== */
-import * as api from './api.js?v=3';
-import { ICONOS, NAV_ADMIN } from './iconos.js?v=3';
+import * as api from './api.js?v=4';
+import { ICONOS, NAV_ADMIN } from './iconos.js?v=4';
 
 const $ = (sel, raiz = document) => raiz.querySelector(sel);
 const $$ = (sel, raiz = document) => [...raiz.querySelectorAll(sel)];
@@ -65,13 +65,27 @@ function itemLista({ icono, titulo, sub, valor, claseValor = '', valorSub = '' }
 const listaVacia = texto => `<li class="vacio">${texto}</li>`;
 const listaCargando = () => listaVacia('Cargando…');
 
-function llenarSelect(select, opciones, textoVacio) {
-  select.innerHTML = `<option value="">${textoVacio}</option>` + opciones.map(o => `<option value="${o.value}">${api.esc(o.texto)}</option>`).join('');
+/* Llena una lista desplegable sin perder lo que la persona ya había elegido */
+function llenarSelect(select, opciones, textoVacio, textoOtro) {
+  const elegido = select.value;
+  select.innerHTML = `<option value="">${textoVacio}</option>` + opciones.map(o => `<option value="${o.value}">${api.esc(o.texto)}</option>`).join('')
+    + (textoOtro ? `<option value="nuevo">${textoOtro}</option>` : '');
+  if (elegido && [...select.options].some(o => o.value === elegido)) select.value = elegido;
 }
 
 function subtituloEncabezado(texto) {
   const small = $('.barra-app h1 small');
   if (small) small.textContent = texto;
+}
+
+/* Velocidad: pinta primero con lo guardado en el teléfono (aparece al instante) y enseguida
+   vuelve a pintar con los datos frescos de internet. Devuelve true si alcanzó a mostrar lo guardado. */
+async function pintarRapido(pintar, lista) {
+  let rapido = false;
+  try { await api.conDatosGuardados(pintar); rapido = true; } catch {}
+  if (!rapido && lista) lista.innerHTML = listaCargando();
+  await pintar();
+  return rapido;
 }
 
 /* Filtros "Desde / Hasta" de las pantallas de consulta */
@@ -88,7 +102,7 @@ function prepararFiltros(alFiltrar, tipoReporte) {
     ocultarAvisos();
     subtituloEncabezado(api.etiquetaRango(desde.value, hasta.value));
     if (pdf) pdf.href = `vista-previa-reporte.html?tipo=${tipoReporte}&desde=${desde.value}&hasta=${hasta.value}`;
-    try { await alFiltrar(desde.value, hasta.value); }
+    try { await pintarRapido(() => alFiltrar(desde.value, hasta.value), $('ul.lista')); }
     catch (e) { console.error(e); aviso('error', api.esc(api.mensajeError(e)), $('main')); }
   };
   $('.filtros .btn-primario').addEventListener('click', ejecutar);
@@ -151,7 +165,10 @@ async function paginaPanel(perfil) {
   $('.saludo').textContent = `Hola, ${api.nombreCorto(perfil)} · ${api.ROLES[perfil.rol]}`;
   $('.titulo-seccion').textContent = `Resumen de ${mes.nombre}`;
   conectarCerrarSesion(perfil);
+  await pintarRapido(() => pintarPanel(mes));
+}
 
+async function pintarPanel(mes) {
   const hayGrafico = !!$('.grafico');
   const [r, movimientos, lotesGrafico] = await Promise.all([
     api.resumen(mes.desde, mes.hasta), api.ultimosMovimientos(3), hayGrafico ? api.listarLotes() : [],
@@ -208,11 +225,10 @@ async function paginaRegistrarProduccion(perfil) {
   let lotes = [];
   const cargarLotes = async () => {
     lotes = await api.listarLotes();
-    llenarSelect(lote, lotes.map(l => ({ value: l.id, texto: api.nombreLote(l) })), 'Seleccione un lote');
-    lote.insertAdjacentHTML('beforeend', '<option value="nuevo">+ Otro lote…</option>');
+    llenarSelect(lote, lotes.map(l => ({ value: l.id, texto: api.nombreLote(l) })), 'Seleccione un lote', '+ Otro lote…');
   };
   lote.addEventListener('change', () => { campoNuevo.hidden = lote.value !== 'nuevo'; if (!campoNuevo.hidden) $('#lote-nuevo').focus(); });
-  await cargarLotes();
+  await pintarRapido(cargarLotes);
   // Si todavía no hay lotes, se abre directo el campo para crear el primero
   if (!lotes.length) { lote.value = 'nuevo'; campoNuevo.hidden = false; }
 
@@ -242,7 +258,6 @@ async function paginaRegistrarProduccion(perfil) {
 async function paginaConsultarProduccion() {
   const lista = $('ul.lista');
   const ejecutar = prepararFiltros(async (desde, hasta) => {
-    lista.innerHTML = listaCargando();
     const filas = await api.listarProduccion(desde, hasta);
     const total = filas.reduce((s, p) => s + Number(p.kilos), 0);
     const lotesDistintos = new Set(filas.map(p => p.lote?.id)).size;
@@ -320,7 +335,6 @@ async function paginaConsultarGastos() {
   const lista = $('ul.lista');
   const tipos = { Insumos: 'insumos', 'Mano de obra': 'mano_obra', Transporte: 'transporte' };
   const ejecutar = prepararFiltros(async (desde, hasta) => {
-    lista.innerHTML = listaCargando();
     const filas = await api.listarGastos(desde, hasta, tipos[$('#tipo-g').value]);
     $('.total strong').textContent = api.pesos(filas.reduce((s, g) => s + Number(g.valor), 0));
     $('.total > span').textContent = `${pl(filas.length, 'gasto', 'gastos')}`;
@@ -356,11 +370,10 @@ async function paginaRegistrarVenta(perfil) {
 
   const cargarCompradores = async () => {
     const lista = await api.listarCompradores();
-    llenarSelect(comprador, lista.map(c => ({ value: c.id, texto: c.nombre })), 'Seleccione un comprador');
-    comprador.insertAdjacentHTML('beforeend', '<option value="nuevo">+ Otro comprador…</option>');
+    llenarSelect(comprador, lista.map(c => ({ value: c.id, texto: c.nombre })), 'Seleccione un comprador', '+ Otro comprador…');
   };
   comprador.addEventListener('change', () => { campoNuevo.hidden = comprador.value !== 'nuevo'; if (!campoNuevo.hidden) $('#comprador-nuevo').focus(); });
-  await cargarCompradores();
+  await pintarRapido(cargarCompradores);
 
   alEnviar(form, async () => {
     const kg = api.numero($('#cantidad-venta').value);
@@ -392,7 +405,6 @@ async function paginaRegistrarVenta(perfil) {
 async function paginaConsultarVentas() {
   const lista = $('ul.lista');
   const ejecutar = prepararFiltros(async (desde, hasta) => {
-    lista.innerHTML = listaCargando();
     const filas = await api.listarVentas(desde, hasta);
     $('.total strong').textContent = api.pesos(filas.reduce((s, v) => s + Number(v.valor_total), 0));
     $('.total > span').innerHTML = `${pl(filas.length, 'venta', 'ventas')}<br>${api.kilos(filas.reduce((s, v) => s + Number(v.kilos), 0))}`;
@@ -404,6 +416,10 @@ async function paginaConsultarVentas() {
 }
 
 async function paginaResumen() {
+  await pintarRapido(pintarResumen);
+}
+
+async function pintarResumen() {
   const params = new URLSearchParams(location.search);
   const mes = api.mesActual();
   const desde = params.get('desde') || mes.desde, hasta = params.get('hasta') || mes.hasta;
@@ -730,7 +746,6 @@ const PAGINAS = {
   'recuperar-clave.html':            { publica: true, fn: paginaRecuperarClave },
   'nueva-clave.html':                { publica: true, fn: paginaNuevaClave },
   'sesion-vencida.html':             { publica: true },
-  'error.html':                      { publica: true },
   'panel.html':                      { roles: ADMIN, fn: paginaPanel },
   'registrar-produccion.html':       { roles: ADMIN, fn: paginaRegistrarProduccion },
   'consultar-produccion.html':       { roles: ADMIN, fn: paginaConsultarProduccion },

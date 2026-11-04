@@ -9,27 +9,37 @@
 // =====================================================================
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+// Solo la aplicación publicada puede llamar a esta función desde el navegador.
+// Si cambia la dirección de la app, actualícela aquí y vuelva a publicar la función.
+const ORIGENES_PERMITIDOS = ["https://finca-cafetera.vercel.app"];
 
-// Contraseña temporal: 10 caracteres sin letras confusas (0/O, 1/l/I)
+function encabezadosCors(req: Request): Record<string, string> {
+  const origen = req.headers.get("Origin") ?? "";
+  return {
+    "Access-Control-Allow-Origin": ORIGENES_PERMITIDOS.includes(origen) ? origen : ORIGENES_PERMITIDOS[0],
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Vary": "Origin",
+  };
+}
+
+// Contraseña temporal: 10 caracteres sin letras confusas (0/O, 1/l/I), y siempre con al menos
+// una minúscula, una mayúscula y un número (así cumple las reglas de contraseña de Supabase).
 function claveTemporal(): string {
-  const letras = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
-  const bytes = new Uint8Array(10);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes, (b) => letras[b % letras.length]).join("");
+  const grupos = ["ABCDEFGHJKLMNPQRSTUVWXYZ", "abcdefghijkmnpqrstuvwxyz", "23456789"];
+  const todas = grupos.join("");
+  const azar = (n: number) => { const b = new Uint32Array(1); crypto.getRandomValues(b); return b[0] % n; };
+  const clave = grupos.map((g) => g[azar(g.length)]);
+  while (clave.length < 10) clave.push(todas[azar(todas.length)]);
+  for (let i = clave.length - 1; i > 0; i--) { const j = azar(i + 1); [clave[i], clave[j]] = [clave[j], clave[i]]; }
+  return clave.join("");
 }
 
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const cors = encabezadosCors(req);
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
+  if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   if (req.method !== "POST") return json({ error: "Método no permitido." }, 405);
 
   try {
@@ -100,6 +110,7 @@ Deno.serve(async (req: Request) => {
 
     return json({ ok: true, password_temporal: password });
   } catch (e) {
-    return json({ error: "Error inesperado: " + String(e) }, 500);
+    console.error(e);   // el detalle queda en los registros de Supabase, no se muestra al usuario
+    return json({ error: "Ocurrió un error inesperado en el servidor. Intente de nuevo." }, 500);
   }
 });

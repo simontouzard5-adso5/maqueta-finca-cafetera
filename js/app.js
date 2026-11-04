@@ -2,6 +2,7 @@
    Ayudas de interfaz comunes a todas las pantallas: mostrar contraseña, validación de
    formularios con mensajes en lenguaje cotidiano y cálculo del valor de la venta.
    La conexión con la base de datos está en js/api.js y js/paginas.js. */
+import { numero, miles as conPuntos } from './formato.js?v=4';
 
 /* Funcionamiento sin señal: guarda la aplicación en el teléfono (ver sw.js) */
 if ('serviceWorker' in navigator) {
@@ -21,17 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // "1.250,5" → 1250.5 · "18.500" → 18500 · "120.5" → 120.5
-  const numero = texto => {
-    let t = String(texto ?? '').trim().replace(/[\s$]/g, '');
-    if (t.includes(',')) t = t.replace(/\./g, '').replace(',', '.');
-    else if (!/^\d+\.\d{1,2}$/.test(t)) t = t.replace(/\./g, '');
-    return /^-?\d+(\.\d+)?$/.test(t) ? Number(t) : NaN;
-  };
-
   // Separador de miles mientras se escribe: 100000 → 100.000 · 1250,5 → 1.250,5
   // Pesos (sin decimales): #valor, #precio-kg · Kilos (un decimal con coma): #kilos, #cantidad-venta
-  const miles = digitos => digitos.replace(/^0+(?=\d)/, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  const miles = digitos => conPuntos(digitos.replace(/^0+(?=\d)/, ''));
   const formatear = (campo, conDecimal) => {
     const antes = campo.value;
     const cursor = campo.selectionStart ?? antes.length;

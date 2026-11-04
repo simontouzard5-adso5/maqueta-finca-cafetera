@@ -4,8 +4,10 @@
    La seguridad real la imponen las reglas RLS de la base de datos; lo que
    se valida aquí es solo para dar mensajes claros al usuario.
    ===================================================================== */
-import { createClient } from '../vendor/supabase.esm.js?v=3';
-import { SUPABASE_URL, SUPABASE_KEY } from './config.js?v=3';
+import { createClient } from '../vendor/supabase.esm.js?v=4';
+import { SUPABASE_URL, SUPABASE_KEY } from './config.js?v=4';
+import { numero, miles } from './formato.js?v=4';
+export { numero };
 
 export const configurado = /^https:\/\//.test(SUPABASE_URL) && !/^PEGUE/.test(SUPABASE_KEY);
 export const sb = configurado ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
@@ -17,7 +19,7 @@ export const TIPOS_GASTO = { insumos: 'Insumos', mano_obra: 'Mano de obra', tran
 /* 900123456-7 → "NIT 900.123.456-7" · 1053784005 → "C.C./NIT 1.053.784.005" */
 export const documento = d => {
   const [num, dv] = String(d).split('-');
-  const conPuntos = num.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  const conPuntos = miles(num);
   return dv !== undefined ? `NIT ${conPuntos}-${dv}` : `C.C./NIT ${conPuntos}`;
 };
 export const CLASES_INSUMO = { herramienta: 'Herramienta', materiales: 'Materiales', produccion: 'Insumos de producción' };
@@ -30,15 +32,6 @@ export const cantidadUnidad = g => g.cantidad == null ? '' :
 export const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 export const pesos = n => '$ ' + Math.round(Number(n) || 0).toLocaleString('es-CO');
 export const kilos = n => (Number(n) || 0).toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kg';
-
-/* Convierte lo que escribe el usuario a número: "1.250,5" → 1250.5 · "18.500" → 18500 · "120.5" → 120.5 */
-export function numero(texto) {
-  let t = String(texto ?? '').trim().replace(/[\s$]/g, '');
-  if (!t) return NaN;
-  if (t.includes(',')) t = t.replace(/\./g, '').replace(',', '.');
-  else if (!/^\d+\.\d{1,2}$/.test(t)) t = t.replace(/\./g, '');
-  return /^-?\d+(\.\d+)?$/.test(t) ? Number(t) : NaN;
-}
 
 const dosDigitos = n => String(n).padStart(2, '0');
 export const fechaISO = d => `${d.getFullYear()}-${dosDigitos(d.getMonth() + 1)}-${dosDigitos(d.getDate())}`;
@@ -71,9 +64,13 @@ export const iniciales = p => ((p.nombres || '')[0] || '') + ((p.apellidos || ''
 export const nombreCorto = p => (p.nombres || '').split(' ')[0];
 
 /* ---------------- Errores en lenguaje cotidiano ---------------- */
+/* Errores que significan "no hay conexión" (un solo lugar para reconocerlos) */
+const ERROR_DE_RED = /Failed to fetch|NetworkError|Load failed|network/i;
+const esErrorDeRed = e => !navigator.onLine || ERROR_DE_RED.test(String(e?.message || e));
+
 export function mensajeError(e) {
   const m = String(e?.message || e || '');
-  if (/Failed to fetch|NetworkError|Load failed|network/i.test(m) || (!m && !navigator.onLine)) return 'No hay conexión a internet. Intente de nuevo cuando tenga señal.';
+  if (ERROR_DE_RED.test(m) || (!m && !navigator.onLine)) return 'No hay conexión a internet. Intente de nuevo cuando tenga señal.';
   if (/Invalid login credentials/i.test(m)) return 'El correo o la contraseña no son correctos.';
   if (/Email not confirmed/i.test(m)) return 'Este correo aún no está confirmado. Pida ayuda al administrador.';
   if (/row-level security|permission denied/i.test(m)) return 'Su usuario no tiene permiso para hacer esta acción.';
@@ -83,7 +80,6 @@ export function mensajeError(e) {
   if (/same.*password|different from the old/i.test(m)) return 'La contraseña nueva debe ser diferente a la anterior.';
   return m || 'Ocurrió un error inesperado.';
 }
-const esErrorDeRed = e => !navigator.onLine || /Failed to fetch|NetworkError|Load failed/i.test(String(e?.message || e));
 
 /* ---------------- Sin señal ----------------
    - Cada consulta exitosa se guarda en el teléfono; si después no hay señal, se muestra
@@ -100,7 +96,21 @@ function leerCache(clave) {
 export function borrarCacheDatos() {
   try { Object.keys(localStorage).filter(k => k.startsWith(CLAVE_DATOS)).forEach(k => localStorage.removeItem(k)); } catch {}
 }
+/* Para mostrar los datos al instante: mientras corre conDatosGuardados(), las consultas
+   responden con lo guardado en el teléfono sin esperar a internet (si no hay nada guardado,
+   fallan y la pantalla espera a la red como siempre). */
+let soloGuardado = false;
+export async function conDatosGuardados(pintar) {
+  soloGuardado = true;
+  try { return await pintar(); } finally { soloGuardado = false; }
+}
+
 async function conCache(clave, consulta) {
+  if (soloGuardado) {
+    const c = leerCache(clave);
+    if (!c) throw new Error('Sin datos guardados');
+    return c.datos;
+  }
   try {
     const datos = await consulta();
     guardarCache(clave, datos);

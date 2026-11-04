@@ -6,7 +6,7 @@
    - Los datos de Supabase NO pasan por aquí (los maneja js/api.js).
    Al cambiar la lista de archivos, suba el número de VERSION.
    ===================================================================== */
-const VERSION = 'finca-v1';
+const VERSION = 'finca-v2';
 const ESPERA_RED_MS = 4000;   // con señal muy débil, después de 4 s se usa la copia guardada
 
 const ARCHIVOS = [
@@ -15,10 +15,10 @@ const ARCHIVOS = [
   'registrar-gasto.html', 'consultar-gastos.html', 'registrar-venta.html', 'consultar-ventas.html',
   'resumen-financiero.html', 'resumen-financiero-dueno.html', 'generar-reporte.html', 'vista-previa-reporte.html',
   'lotes.html', 'usuarios.html', 'registrar-usuario.html', 'reiniciar.html',
-  'recuperar-clave.html', 'nueva-clave.html', 'sesion-vencida.html', 'error.html',
+  'recuperar-clave.html', 'nueva-clave.html', 'sesion-vencida.html',
   'css/estilos.css', 'vendor/bootstrap.min.css', 'vendor/supabase.esm.js',
-  'js/app.js', 'js/api.js', 'js/config.js', 'js/iconos.js', 'js/paginas.js',
-  'img/logo.png', 'img/favicon.png', 'img/cafetal.jpg', 'img/poster-tutorial.png',
+  'js/app.js', 'js/api.js', 'js/formato.js', 'js/config.js', 'js/iconos.js', 'js/paginas.js',
+  'img/logo.png', 'img/favicon.png', 'img/cafetal.webp', 'img/poster-tutorial.webp', 'img/apple-touch-icon.png',
   'fonts/inter-400.woff2', 'fonts/inter-500.woff2', 'fonts/inter-600.woff2', 'fonts/inter-700.woff2',
 ];
 
