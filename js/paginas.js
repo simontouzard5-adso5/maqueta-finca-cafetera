@@ -95,9 +95,14 @@ function prepararFiltros(alFiltrar, tipoReporte) {
   return ejecutar;
 }
 
-function conectarCerrarSesion() {
+function conectarCerrarSesion(perfil) {
   $$('a[aria-label="Cerrar sesión"], .lista a[href="index.html"]').forEach(a =>
-    a.addEventListener('click', e => { e.preventDefault(); api.cerrarSesion(); }));
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const n = perfil ? api.pendientes(perfil).length : 0;
+      if (n && !confirm(`Tiene ${pl(n, 'registro', 'registros')} guardados en el teléfono que aún no se han enviado. Se enviarán la próxima vez que ingrese con su cuenta y tenga señal. ¿Cerrar sesión de todos modos?`)) return;
+      api.cerrarSesion();
+    }));
 }
 
 function fijarHoy(...ids) {
@@ -118,15 +123,19 @@ async function paginaIngreso() {
     if (guardado) { correo.value = guardado; recordar.checked = true; }
   } catch {}
 
-  // Si ya tiene una sesión abierta y vigente, entra directo
-  const { data: { session } } = await api.sb.auth.getSession();
-  if (session && !params.get('motivo')) {
+  // Si ya tiene una sesión abierta y vigente (o entró antes en este teléfono y no hay señal), entra directo
+  let session = null;
+  try { ({ data: { session } } = await api.sb.auth.getSession()); } catch {}
+  if ((session || api.puedeEntrarSinSenal()) && !params.get('motivo')) {
     const perfil = await api.exigirSesion(null, { permitirCambioClave: true });
     if (perfil) location.replace(perfil.debe_cambiar_clave ? 'nueva-clave.html' : api.PANEL[perfil.rol]);
     return;
   }
 
+  if (api.sinSenal()) aviso('info', '<strong>Sin señal.</strong> Para ingresar necesita conexión. Si ya había ingresado en este teléfono hoy, la app abre sola sin señal.', form);
+
   alEnviar(form, async boton => {
+    if (api.sinSenal()) throw new Error('No hay señal. Para ingresar necesita conexión a internet.');
     boton.textContent = 'Ingresando…';
     const perfil = await api.iniciarSesion(correo.value.trim(), $('#clave').value);
     try {
@@ -141,12 +150,7 @@ async function paginaPanel(perfil) {
   const mes = api.mesActual();
   $('.saludo').textContent = `Hola, ${api.nombreCorto(perfil)} · ${api.ROLES[perfil.rol]}`;
   $('.titulo-seccion').textContent = `Resumen de ${mes.nombre}`;
-  conectarCerrarSesion();
-  if (perfil.rol === 'admin') {
-    api.enviarPendientes(perfil).catch(() => 0).then(enviados => {
-      if (enviados) aviso('ok', `Se enviaron ${enviados} registro(s) de producción que estaban guardados en el teléfono.`, $('main'));
-    });
-  }
+  conectarCerrarSesion(perfil);
 
   const hayGrafico = !!$('.grafico');
   const [r, movimientos, lotesGrafico] = await Promise.all([
@@ -189,7 +193,6 @@ async function paginaPanel(perfil) {
 async function paginaRegistrarProduccion(perfil) {
   const form = $('form.formulario');
   const lote = $('#lote');
-  const bannerSinSenal = $('.aviso-info');
   fijarHoy('fecha');
 
   // Campo para escribir un lote que no está en la lista
@@ -213,22 +216,6 @@ async function paginaRegistrarProduccion(perfil) {
   // Si todavía no hay lotes, se abre directo el campo para crear el primero
   if (!lotes.length) { lote.value = 'nuevo'; campoNuevo.hidden = false; }
 
-  const actualizarBanner = () => {
-    const n = api.pendientesProduccion().length;
-    bannerSinSenal.hidden = !n && navigator.onLine;
-    $('span', bannerSinSenal).innerHTML = navigator.onLine
-      ? `<strong>Registros pendientes.</strong> ${n} registro(s) guardados en el teléfono se están enviando.`
-      : `<strong>Sin señal.</strong> ${n} registro(s) guardados en el teléfono; se enviarán al recuperar la conexión.`;
-  };
-  const sincronizar = async () => {
-    const enviados = await api.enviarPendientes(perfil).catch(() => 0);
-    actualizarBanner();
-    if (enviados) aviso('ok', `Se enviaron ${enviados} registro(s) que estaban guardados en el teléfono.`, form);
-  };
-  window.addEventListener('online', sincronizar);
-  window.addEventListener('offline', actualizarBanner);
-  actualizarBanner();
-  sincronizar();
 
   alEnviar(form, async () => {
     const kg = api.numero($('#kilos').value);
@@ -247,9 +234,8 @@ async function paginaRegistrarProduccion(perfil) {
     }
     const estado = await api.registrarProduccion({ lote_id: loteElegido.id, fecha: $('#fecha').value, kilos: kg }, perfil);
     $('#kilos').value = '';
-    actualizarBanner();
     if (estado === 'enviado') aviso('ok', `Guardado: ${api.esc(api.nombreLote(loteElegido))} · ${api.kilos(kg)}`, form);
-    else aviso('info', `<strong>Sin señal.</strong> El registro de ${api.kilos(kg)} quedó guardado en el teléfono y se enviará al recuperar la conexión.`, form);
+    else aviso('info', `<strong>Sin señal.</strong> ${api.esc(api.nombreLote(loteElegido))} · ${api.kilos(kg)} quedó guardado en el teléfono y se enviará solo al recuperar la conexión.`, form);
   });
 }
 
@@ -316,9 +302,10 @@ async function paginaRegistrarGasto(perfil) {
       });
     }
 
-    await api.registrarGasto(gasto, perfil);
+    const estado = await api.registrarGasto(gasto, perfil);
     const extra = tipo === 'insumos' ? ` · ${api.esc(api.cantidadUnidad(gasto))} · ${api.esc(gasto.proveedor)}` : '';
-    aviso('ok', `Gasto guardado: ${api.esc(gasto.descripcion)}${extra} · ${api.pesos(valor)}`, form);
+    if (estado === 'enviado') aviso('ok', `Gasto guardado: ${api.esc(gasto.descripcion)}${extra} · ${api.pesos(valor)}`, form);
+    else aviso('info', `<strong>Sin señal.</strong> El gasto "${api.esc(gasto.descripcion)}" por ${api.pesos(valor)} quedó guardado en el teléfono y se enviará solo al recuperar la conexión.`, form);
     $('#desc').value = ''; $('#valor').value = '';
     if (tipo === 'insumos') {
       $('#cantidad-insumo').value = ''; $('#unidad').value = '';
@@ -395,7 +382,8 @@ async function paginaRegistrarVenta(perfil) {
       $('#comprador-nuevo').value = '';
     }
     const venta = await api.registrarVenta({ comprador_id: compradorId, fecha: $('#fecha-v').value, kilos: kg, precio_kg: precio }, perfil);
-    aviso('ok', `Venta guardada por ${api.pesos(venta.valor_total)}.`, form);
+    if (venta.estado === 'enviado') aviso('ok', `Venta guardada por ${api.pesos(venta.valor_total)}.`, form);
+    else aviso('info', `<strong>Sin señal.</strong> La venta por ${api.pesos(venta.valor_total)} quedó guardada en el teléfono y se enviará sola al recuperar la conexión.`, form);
     $('#cantidad-venta').value = ''; $('#precio-kg').value = '';
     $('#cantidad-venta').dispatchEvent(new Event('input'));
   });
@@ -558,7 +546,7 @@ async function paginaMas(perfil) {
   $('.perfil .avatar').textContent = api.iniciales(perfil);
   $('.perfil strong').textContent = `${perfil.nombres} ${perfil.apellidos}`;
   $('.perfil .saludo').textContent = api.ROLES[perfil.rol];
-  conectarCerrarSesion();
+  conectarCerrarSesion(perfil);
 }
 
 async function paginaRecuperarClave() {
@@ -689,6 +677,52 @@ async function paginaLotes() {
   await cargar();
 }
 
+/* ---------------- Barra de estado: sin señal y registros pendientes ---------------- */
+function barraEstado(perfil, config) {
+  const barra = document.createElement('div');
+  barra.className = 'barra-estado';
+  barra.setAttribute('role', 'status');
+  barra.hidden = true;
+  const encabezado = $('.barra-app');
+  if (encabezado) encabezado.after(barra); else document.body.prepend(barra);
+
+  const pintar = (texto = null) => {
+    const n = api.pendientes(perfil).length;
+    const regs = pl(n, 'registro', 'registros');
+    let msg = texto;
+    if (!msg && api.sinSenal()) msg = n ? `Sin señal · ${regs} guardados en el teléfono` : 'Sin señal · puede seguir registrando';
+    else if (!msg && n) msg = `${regs} por enviar`;
+    barra.hidden = !msg;
+    barra.classList.toggle('sin-senal', api.sinSenal());
+    barra.textContent = msg || '';
+  };
+
+  const sincronizar = async () => {
+    if (api.sinSenal() || !api.pendientes(perfil).length) { pintar(); return; }
+    pintar('Enviando registros guardados…');
+    const r = await api.enviarPendientes(perfil).catch(() => ({ enviados: 0, conError: 0 }));
+    pintar();
+    if (r.enviados) {
+      aviso('ok', `Se ${r.enviados === 1 ? 'envió' : 'enviaron'} ${pl(r.enviados, 'registro guardado', 'registros guardados')} en el teléfono.`, $('main'));
+      // en pantallas de consulta se recargan los datos para que incluyan lo enviado
+      if (!$('form[data-validar]')) setTimeout(() => location.reload(), 1200);
+    }
+    if (r.conError) aviso('error', `${pl(r.conError, 'registro', 'registros')} no se pudieron enviar. Revise su conexión o consulte al administrador.`, $('main'));
+  };
+
+  window.addEventListener('online', sincronizar);
+  window.addEventListener('offline', () => pintar());
+  window.addEventListener('pendientes-cambio', () => pintar());
+  let avisado = false;
+  window.addEventListener('datos-sin-senal', e => {
+    if (avisado) return; avisado = true;
+    const f = new Date(e.detail.cuando);
+    aviso('info', `<strong>Sin señal.</strong> Está viendo los datos guardados el ${api.fechaCorta(api.fechaISO(f))} a las ${f.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false })}. Lo registrado sin señal se sumará al enviarse.`, $('main'));
+  });
+  pintar();
+  sincronizar();
+}
+
 /* ---------------- Mapa: página → roles permitidos y función ---------------- */
 const ADMIN = ['admin'], DUENO = ['dueno'], TODOS = ['admin', 'dueno'];
 const PAGINAS = {
@@ -734,6 +768,7 @@ const PAGINAS = {
       const nav = $('.nav-inferior');
       if (nav) nav.outerHTML = NAV_ADMIN;
     }
+    barraEstado(perfil, config);
     await config.fn(perfil);
   } catch (e) {
     console.error(e);

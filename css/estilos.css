@@ -273,6 +273,11 @@ button:disabled { opacity: .65; cursor: progress; }
 /* Botón Mostrar/Ocultar contraseña: ancho fijo para que el campo no cambie de tamaño */
 .input-group-text[data-mostrar] { width: 6.5rem; justify-content: center; flex: none; }
 
+/* Barra de estado: sin señal / registros por enviar */
+.barra-estado { position: sticky; top: 56px; z-index: 19; background: var(--fondo-2); color: var(--color-2); font-size: var(--fs-ayuda); font-weight: 600; text-align: center; padding: .45rem 1rem; border-bottom: 1px solid #D9C9B5; }
+.barra-estado.sin-senal { background: #FFF4D6; color: #6B4B00; border-bottom-color: #F0D58A; }
+.barra-estado.sin-senal::before { content: "● "; color: #C98A00; }
+
 @media print {
   .barra-app, .nav-inferior, .acciones-hoja { display: none !important; }
   body, .app { background: #fff; }

@@ -3,6 +3,11 @@
    formularios con mensajes en lenguaje cotidiano y cálculo del valor de la venta.
    La conexión con la base de datos está en js/api.js y js/paginas.js. */
 
+/* Funcionamiento sin señal: guarda la aplicación en el teléfono (ver sw.js) */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
 
   // Mostrar u ocultar la contraseña

@@ -73,7 +73,7 @@ export const nombreCorto = p => (p.nombres || '').split(' ')[0];
 /* ---------------- Errores en lenguaje cotidiano ---------------- */
 export function mensajeError(e) {
   const m = String(e?.message || e || '');
-  if (!navigator.onLine || /Failed to fetch|NetworkError|Load failed|network/i.test(m)) return 'No hay conexión a internet. Intente de nuevo cuando tenga señal.';
+  if (/Failed to fetch|NetworkError|Load failed|network/i.test(m) || (!m && !navigator.onLine)) return 'No hay conexión a internet. Intente de nuevo cuando tenga señal.';
   if (/Invalid login credentials/i.test(m)) return 'El correo o la contraseña no son correctos.';
   if (/Email not confirmed/i.test(m)) return 'Este correo aún no está confirmado. Pida ayuda al administrador.';
   if (/row-level security|permission denied/i.test(m)) return 'Su usuario no tiene permiso para hacer esta acción.';
@@ -84,6 +84,35 @@ export function mensajeError(e) {
   return m || 'Ocurrió un error inesperado.';
 }
 const esErrorDeRed = e => !navigator.onLine || /Failed to fetch|NetworkError|Load failed/i.test(String(e?.message || e));
+
+/* ---------------- Sin señal ----------------
+   - Cada consulta exitosa se guarda en el teléfono; si después no hay señal, se muestra
+     lo último guardado (y se avisa con el evento "datos-sin-senal").
+   - Los registros hechos sin señal quedan en una cola y se envían solos al volver la conexión. */
+export const sinSenal = () => !navigator.onLine;
+const CLAVE_DATOS = 'finca_datos_';
+function guardarCache(clave, datos) {
+  try { localStorage.setItem(CLAVE_DATOS + clave, JSON.stringify({ cuando: Date.now(), datos })); } catch {}
+}
+function leerCache(clave) {
+  try { return JSON.parse(localStorage.getItem(CLAVE_DATOS + clave) || 'null'); } catch { return null; }
+}
+export function borrarCacheDatos() {
+  try { Object.keys(localStorage).filter(k => k.startsWith(CLAVE_DATOS)).forEach(k => localStorage.removeItem(k)); } catch {}
+}
+async function conCache(clave, consulta) {
+  try {
+    const datos = await consulta();
+    guardarCache(clave, datos);
+    return datos;
+  } catch (e) {
+    if (!esErrorDeRed(e)) throw e;
+    const c = leerCache(clave);
+    if (!c) throw new Error('No hay señal y todavía no hay datos guardados en el teléfono para esta pantalla. Ábrala una vez con conexión.');
+    window.dispatchEvent(new CustomEvent('datos-sin-senal', { detail: { cuando: c.cuando } }));
+    return c.datos;
+  }
+}
 
 function revisar({ data, error }) {
   if (error) throw error;
@@ -97,20 +126,26 @@ const CLAVE_INICIO = 'finca_inicio_sesion';
    Es solo para la interfaz: los permisos reales los revisa la base de datos (RLS) en cada consulta. */
 const CLAVE_PERFIL = 'finca_perfil';
 const MINUTOS_PERFIL = 5;
-export function olvidarPerfil() { try { sessionStorage.removeItem(CLAVE_PERFIL); } catch {} }
+export function olvidarPerfil() { try { localStorage.removeItem(CLAVE_PERFIL); } catch {} }
+export function perfilGuardado() {
+  try { return JSON.parse(localStorage.getItem(CLAVE_PERFIL) || 'null')?.perfil || null; } catch { return null; }
+}
 
 export async function obtenerPerfil({ usarGuardado = false } = {}) {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { olvidarPerfil(); return null; }
-  if (usarGuardado) {
-    try {
-      const g = JSON.parse(sessionStorage.getItem(CLAVE_PERFIL) || 'null');
-      if (g && g.perfil.id === session.user.id && Date.now() - g.cuando < MINUTOS_PERFIL * 60000) return g.perfil;
-    } catch {}
+  let g = null;
+  try { g = JSON.parse(localStorage.getItem(CLAVE_PERFIL) || 'null'); } catch {}
+  const propio = g && g.perfil.id === session.user.id ? g : null;
+  if (usarGuardado && propio && Date.now() - propio.cuando < MINUTOS_PERFIL * 60000) return propio.perfil;
+  try {
+    const perfil = revisar(await sb.from('perfiles').select('*').eq('id', session.user.id).maybeSingle());
+    try { if (perfil) localStorage.setItem(CLAVE_PERFIL, JSON.stringify({ perfil, cuando: Date.now() })); } catch {}
+    return perfil;
+  } catch (e) {
+    if (esErrorDeRed(e) && propio) return propio.perfil;   // sin señal: se usa el último perfil conocido
+    throw e;
   }
-  const perfil = revisar(await sb.from('perfiles').select('*').eq('id', session.user.id).maybeSingle());
-  try { if (perfil) sessionStorage.setItem(CLAVE_PERFIL, JSON.stringify({ perfil, cuando: Date.now() })); } catch {}
-  return perfil;
 }
 
 export async function iniciarSesion(correo, clave) {
@@ -125,6 +160,7 @@ export async function iniciarSesion(correo, clave) {
 
 export async function cerrarSesion(destino = 'index.html') {
   olvidarPerfil();
+  borrarCacheDatos();
   try { await sb.auth.signOut(); } catch {}
   try { localStorage.removeItem(CLAVE_INICIO); } catch {}
   location.replace(destino);
@@ -132,9 +168,17 @@ export async function cerrarSesion(destino = 'index.html') {
 
 /* Protege una página: exige sesión válida, usuario activo y uno de los roles permitidos.
    Devuelve el perfil, o null si redirigió a otra página. */
+/* ¿Se puede entrar sin señal? (hubo sesión en este teléfono y no han pasado las 8 horas) */
+export function puedeEntrarSinSenal() {
+  let inicio = 0;
+  try { inicio = Number(localStorage.getItem(CLAVE_INICIO)) || 0; } catch {}
+  return sinSenal() && !!perfilGuardado() && !!inicio && Date.now() - inicio <= HORAS_SESION * 3600 * 1000;
+}
+
 export async function exigirSesion(rolesPermitidos, { permitirCambioClave = false } = {}) {
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) { location.replace('index.html'); return null; }
+  let session = null;
+  try { ({ data: { session } } = await sb.auth.getSession()); } catch {}
+  if (!session && !puedeEntrarSinSenal()) { location.replace('index.html'); return null; }
 
   let inicio = 0;
   try { inicio = Number(localStorage.getItem(CLAVE_INICIO)) || 0; } catch {}
@@ -142,7 +186,7 @@ export async function exigirSesion(rolesPermitidos, { permitirCambioClave = fals
     await cerrarSesion('sesion-vencida.html'); return null;
   }
 
-  const perfil = await obtenerPerfil({ usarGuardado: true });
+  const perfil = session ? await obtenerPerfil({ usarGuardado: true }) : perfilGuardado();
   if (!perfil || !perfil.activo) { await cerrarSesion('index.html?motivo=inactivo'); return null; }
   if (perfil.debe_cambiar_clave && !permitirCambioClave) { location.replace('nueva-clave.html'); return null; }
   if (rolesPermitidos && !rolesPermitidos.includes(perfil.rol)) { location.replace(PANEL[perfil.rol]); return null; }
@@ -152,13 +196,14 @@ export async function exigirSesion(rolesPermitidos, { permitirCambioClave = fals
 export const marcarInicioSesion = () => { try { localStorage.setItem(CLAVE_INICIO, String(Date.now())); } catch {} };
 
 /* ---------------- Catálogos ---------------- */
-export const listarLotes = async () =>
-  revisar(await sb.from('lotes').select('id, numero, nombre').eq('activo', true).order('numero'));
+export const listarLotes = () => conCache('lotes', async () =>
+  revisar(await sb.from('lotes').select('id, numero, nombre').eq('activo', true).order('numero')));
 
-export const listarCompradores = async () =>
-  revisar(await sb.from('compradores').select('id, nombre').eq('activo', true).order('nombre'));
+export const listarCompradores = () => conCache('compradores', async () =>
+  revisar(await sb.from('compradores').select('id, nombre').eq('activo', true).order('nombre')));
 
 export async function crearComprador(nombre, perfil) {
+  if (sinSenal()) throw new Error('Para agregar un comprador nuevo necesita conexión. Elija uno de la lista o intente cuando tenga señal.');
   return revisar(await sb.from('compradores').insert({ nombre: nombre.trim(), creado_por: perfil.id }).select('id, nombre').single());
 }
 
@@ -172,79 +217,115 @@ export const renombrarLote = async (id, nombre) =>
 export const eliminarLote = async id => revisar(await sb.rpc('fn_eliminar_lote', { p_id: id }));
 /* Cuántos registros de producción tiene cada lote: { lote_id: cantidad } */
 export async function produccionPorLote() {
-  const filas = revisar(await sb.from('produccion').select('lote_id'));
+  const filas = await conCache('produccion_lotes', async () => revisar(await sb.from('produccion').select('lote_id')));
   return filas.reduce((m, f) => { m[f.lote_id] = (m[f.lote_id] || 0) + 1; return m; }, {});
 }
 
 export const nombreLote = l => l ? `Lote ${l.numero} · ${l.nombre}` : 'Lote';
 
 /* ---------------- Producción ---------------- */
-export const listarProduccion = async (desde, hasta) =>
+export const listarProduccion = (desde, hasta) => conCache(`produccion_${desde}_${hasta}`, async () =>
   revisar(await sb.from('produccion').select('id, fecha, kilos, lote:lotes(id, numero, nombre)')
-    .gte('fecha', desde).lte('fecha', hasta).order('fecha', { ascending: false }).order('id', { ascending: false }));
+    .gte('fecha', desde).lte('fecha', hasta).order('fecha', { ascending: false }).order('id', { ascending: false })));
 
-/* Registros guardados en el teléfono cuando no hay señal */
-const CLAVE_PENDIENTES = 'finca_produccion_pendiente';
-export function pendientesProduccion() {
-  try { return JSON.parse(localStorage.getItem(CLAVE_PENDIENTES) || '[]'); } catch { return []; }
-}
-function guardarPendientes(lista) {
-  try { localStorage.setItem(CLAVE_PENDIENTES, JSON.stringify(lista)); } catch {}
-}
-
-/* Devuelve 'enviado' o 'pendiente' (sin señal: queda guardado en el teléfono) */
-export async function registrarProduccion(registro, perfil) {
-  const fila = { ...registro, id_cliente: registro.id_cliente || crypto.randomUUID(), registrado_por: perfil.id };
-  if (!navigator.onLine) { guardarPendientes([...pendientesProduccion(), fila]); return 'pendiente'; }
+/* ---------------- Cola de registros hechos sin señal ----------------
+   Cada registro lleva un id_cliente único: si se reenvía, la base de datos lo reconoce
+   y no lo duplica. Cada registro guarda quién lo hizo, y solo se envía con esa misma cuenta. */
+const CLAVE_COLA = 'finca_pendientes';
+const CLAVE_COLA_VIEJA = 'finca_produccion_pendiente';   // formato anterior (solo producción)
+function leerCola() {
+  let cola = [];
+  try { cola = JSON.parse(localStorage.getItem(CLAVE_COLA) || '[]'); } catch {}
   try {
-    const { error } = await sb.from('produccion').insert(fila);
+    const viejos = JSON.parse(localStorage.getItem(CLAVE_COLA_VIEJA) || '[]');
+    if (viejos.length) {
+      cola = [...cola, ...viejos.map(fila => ({ tabla: 'produccion', fila, cuando: Date.now() }))];
+      localStorage.setItem(CLAVE_COLA, JSON.stringify(cola));
+      localStorage.removeItem(CLAVE_COLA_VIEJA);
+    }
+  } catch {}
+  return cola;
+}
+function guardarCola(cola) {
+  try { localStorage.setItem(CLAVE_COLA, JSON.stringify(cola)); } catch {}
+  window.dispatchEvent(new CustomEvent('pendientes-cambio', { detail: { cantidad: cola.length } }));
+}
+/* Pendientes de una persona (o de todas si no se indica) */
+export const pendientes = perfil => leerCola().filter(p => !perfil || p.fila.registrado_por === perfil.id);
+export const pendientesProduccion = perfil => pendientes(perfil).filter(p => p.tabla === 'produccion');
+
+/* Guarda en la base de datos, o en la cola si no hay señal. Devuelve 'enviado' o 'pendiente'. */
+async function guardarOEncolar(tabla, datos, perfil) {
+  const fila = { ...datos, id_cliente: datos.id_cliente || crypto.randomUUID(), registrado_por: perfil.id };
+  const encolar = () => { guardarCola([...leerCola(), { tabla, fila, cuando: Date.now() }]); return 'pendiente'; };
+  if (sinSenal()) return encolar();
+  try {
+    const { error } = await sb.from(tabla).insert(fila);
     if (error && error.code !== '23505') throw error;   // 23505 = ya estaba guardado
     return 'enviado';
   } catch (e) {
-    if (esErrorDeRed(e)) { guardarPendientes([...pendientesProduccion(), fila]); return 'pendiente'; }
+    if (esErrorDeRed(e)) return encolar();
     throw e;
   }
 }
+export const registrarProduccion = (registro, perfil) => guardarOEncolar('produccion', registro, perfil);
 
-/* Envía lo que quedó guardado sin señal. Devuelve cuántos se enviaron. */
+/* Envía lo que quedó guardado sin señal. Devuelve { enviados, conError }. */
+let enviando = false;
 export async function enviarPendientes(perfil) {
-  const lista = pendientesProduccion();
-  if (!lista.length || !navigator.onLine) return 0;
-  let enviados = 0;
-  const restantes = [];
-  for (const fila of lista) {
-    try {
-      const { error } = await sb.from('produccion').insert({ ...fila, registrado_por: perfil.id });
-      if (error && error.code !== '23505') throw error;
-      enviados++;
-    } catch (e) {
-      restantes.push(fila);
-      if (esErrorDeRed(e)) { restantes.push(...lista.slice(lista.indexOf(fila) + 1)); break; }
+  const resultado = { enviados: 0, conError: 0 };
+  if (enviando || sinSenal() || !perfil) return resultado;
+  const propios = pendientes(perfil);
+  if (!propios.length) return resultado;
+  enviando = true;
+  const quedan = [];
+  try {
+    for (let i = 0; i < propios.length; i++) {
+      const p = propios[i];
+      try {
+        const { error } = await sb.from(p.tabla).insert(p.fila);
+        if (error && error.code !== '23505') throw error;
+        resultado.enviados++;
+      } catch (e) {
+        quedan.push(p);
+        if (esErrorDeRed(e)) { quedan.push(...propios.slice(i + 1)); break; }
+        resultado.conError++;
+        p.error = mensajeError(e);
+      }
     }
+  } finally {
+    // se conservan: los que no se pudieron enviar, los de otras cuentas y los que llegaron mientras se enviaba
+    const ids = new Set(propios.map(p => p.fila.id_cliente));
+    guardarCola([...quedan, ...leerCola().filter(p => !ids.has(p.fila.id_cliente))]);
+    enviando = false;
   }
-  guardarPendientes(restantes);
-  return enviados;
+  return resultado;
 }
 
 /* ---------------- Gastos ---------------- */
-export async function listarGastos(desde, hasta, tipo) {
-  let q = sb.from('gastos').select('id, tipo, descripcion, valor, fecha, proveedor, documento_proveedor, clase_insumo, cantidad, unidad').gte('fecha', desde).lte('fecha', hasta);
-  if (tipo) q = q.eq('tipo', tipo);
-  return revisar(await q.order('fecha', { ascending: false }).order('id', { ascending: false }));
+export function listarGastos(desde, hasta, tipo) {
+  return conCache(`gastos_${desde}_${hasta}_${tipo || 'todos'}`, async () => {
+    let q = sb.from('gastos').select('id, tipo, descripcion, valor, fecha, proveedor, documento_proveedor, clase_insumo, cantidad, unidad').gte('fecha', desde).lte('fecha', hasta);
+    if (tipo) q = q.eq('tipo', tipo);
+    return revisar(await q.order('fecha', { ascending: false }).order('id', { ascending: false }));
+  });
 }
-export const registrarGasto = async (gasto, perfil) =>
-  revisar(await sb.from('gastos').insert({ ...gasto, registrado_por: perfil.id }));
+export const registrarGasto = (gasto, perfil) => guardarOEncolar('gastos', gasto, perfil);
 
 /* ---------------- Ventas ---------------- */
-export const listarVentas = async (desde, hasta) =>
+export const listarVentas = (desde, hasta) => conCache(`ventas_${desde}_${hasta}`, async () =>
   revisar(await sb.from('ventas').select('id, fecha, kilos, precio_kg, valor_total, comprador:compradores(id, nombre)')
-    .gte('fecha', desde).lte('fecha', hasta).order('fecha', { ascending: false }).order('id', { ascending: false }));
+    .gte('fecha', desde).lte('fecha', hasta).order('fecha', { ascending: false }).order('id', { ascending: false })));
 
-export const registrarVenta = async (venta, perfil) =>
-  revisar(await sb.from('ventas').insert({ ...venta, registrado_por: perfil.id }).select('valor_total').single());
+/* Devuelve { estado: 'enviado' | 'pendiente', valor_total } (el total se calcula igual que en la base de datos) */
+export async function registrarVenta(venta, perfil) {
+  const estado = await guardarOEncolar('ventas', venta, perfil);
+  return { estado, valor_total: Math.round(venta.kilos * venta.precio_kg) };
+}
 
 /* Últimos movimientos de dinero (ventas y gastos) */
-export async function ultimosMovimientos(cantidad = 3) {
+export const ultimosMovimientos = (cantidad = 3) => conCache(`movimientos_${cantidad}`, () => ultimosMovimientosRed(cantidad));
+async function ultimosMovimientosRed(cantidad) {
   const [ventas, gastos] = await Promise.all([
     sb.from('ventas').select('id, fecha, valor_total, creado_en, comprador:compradores(nombre)').order('fecha', { ascending: false }).order('creado_en', { ascending: false }).limit(cantidad).then(revisar),
     sb.from('gastos').select('id, fecha, tipo, descripcion, valor, creado_en').order('fecha', { ascending: false }).order('creado_en', { ascending: false }).limit(cantidad).then(revisar),
@@ -266,8 +347,8 @@ export async function resumen(desde, hasta) {
 }
 
 /* ---------------- Usuarios ---------------- */
-export const listarPerfiles = async () =>
-  revisar(await sb.from('perfiles').select('id, nombres, apellidos, correo, rol, activo').order('activo', { ascending: false }).order('nombres'));
+export const listarPerfiles = () => conCache('perfiles', async () =>
+  revisar(await sb.from('perfiles').select('id, nombres, apellidos, correo, rol, activo').order('activo', { ascending: false }).order('nombres')));
 
 export const cambiarEstadoUsuario = async (id, activo) =>
   revisar(await sb.rpc('fn_cambiar_estado_usuario', { p_usuario: id, p_activo: activo }));
@@ -317,6 +398,7 @@ export async function reiniciarApp(datos) {
       : error.message));
   }
   if (data?.error) throw new Error(data.error);
-  try { localStorage.removeItem(CLAVE_PENDIENTES); } catch {}
+  guardarCola([]);
+  borrarCacheDatos();
   return data.resultado;
 }
