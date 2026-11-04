@@ -276,9 +276,21 @@ async function paginaRegistrarGasto(perfil) {
   fijarHoy('fecha-g');
 
   // Los datos del insumo (clase, proveedor, cantidad y unidad) solo se piden para "Insumos"
-  const mostrarDetalle = () => { detalle.hidden = !$('#t1').checked; };
+  // El ejemplo de "Descripción" cambia según lo que se elija
+  const EJEMPLOS = {
+    herramienta: 'Guadaña', materiales: 'Postes de madera', produccion: 'Cal agrícola',
+    insumos: 'Abono para el lote 2', mano_obra: 'Jornales de la semana', transporte: 'Flete a la cooperativa',
+  };
+  const actualizarEjemplo = () => {
+    const tipo = tipos[$('input[name="tipo"]:checked').id];
+    const clase = $('input[name="clase"]:checked');
+    const ejemplo = tipo === 'insumos' && clase ? EJEMPLOS[clase.value] : EJEMPLOS[tipo];
+    $('#desc').placeholder = 'Ej.: ' + ejemplo;
+    $('#desc').dataset.mensaje = 'Describa el gasto, por ejemplo: ' + ejemplo.toLowerCase() + '.';
+  };
+  const mostrarDetalle = () => { detalle.hidden = !$('#t1').checked; actualizarEjemplo(); };
   $$('input[name="tipo"]').forEach(r => r.addEventListener('change', mostrarDetalle));
-  $$('input[name="clase"]').forEach(r => r.addEventListener('change', () => { $('#clase-error').textContent = ''; }));
+  $$('input[name="clase"]').forEach(r => r.addEventListener('change', () => { $('#clase-error').textContent = ''; actualizarEjemplo(); }));
   mostrarDetalle();
 
   alEnviar(form, async () => {
@@ -311,6 +323,7 @@ async function paginaRegistrarGasto(perfil) {
     if (tipo === 'insumos') {
       $('#cantidad-insumo').value = ''; $('#unidad').value = '';
       $$('input[name="clase"]').forEach(r => { r.checked = false; });
+      actualizarEjemplo();
       // el proveedor se deja escrito, por si el siguiente insumo es del mismo lugar
     }
   });
