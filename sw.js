@@ -6,7 +6,7 @@
    - Los datos de Supabase NO pasan por aquí (los maneja js/api.js).
    Al cambiar la lista de archivos, suba el número de VERSION.
    ===================================================================== */
-const VERSION = 'finca-v2';
+const VERSION = 'finca-v3';
 const ESPERA_RED_MS = 4000;   // con señal muy débil, después de 4 s se usa la copia guardada
 
 const ARCHIVOS = [
