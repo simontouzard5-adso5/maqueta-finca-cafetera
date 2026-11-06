@@ -286,3 +286,8 @@ button:disabled { opacity: .65; cursor: progress; }
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* Logos de las entidades aliadas (SENA y Café de Colombia), en blanco en el encabezado */
+.logos-aliados { display: flex; align-items: center; gap: .6rem; flex-shrink: 0; padding-right: .25rem; }
+.logos-aliados img { height: 30px; width: auto; }
+@media (max-width: 340px) { .logos-aliados img { height: 24px; } .logos-aliados { gap: .4rem; } }
